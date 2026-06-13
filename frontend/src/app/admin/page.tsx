@@ -343,7 +343,7 @@ export default function AdminDashboardPage() {
 
       {/* Session Details Dialog */}
       <Dialog open={!!selectedSession} onOpenChange={(open) => !open && setSelectedSession(null)}>
-        <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto p-0 sm:p-6 gap-0">
+        <DialogContent className="sm:max-w-5xl w-full max-h-[90vh] overflow-y-auto p-0 sm:p-6 gap-0">
           <DialogHeader className="px-6 py-4 sm:px-0 sm:py-0">
             <DialogTitle className="flex items-center gap-2 text-2xl font-bold border-b pb-4">
               <Info className="w-6 h-6 text-primary" /> Session Intelligence

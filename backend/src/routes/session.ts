@@ -62,7 +62,9 @@ router.get('/admin', async (req, res) => {
       include: {
         agent: { select: { id: true, name: true, email: true } },
         participants: { include: { user: { select: { id: true, name: true, role: true } } } },
-        recordings: true
+        recordings: true,
+        messages: { include: { sender: { select: { name: true, role: true } } } },
+        events: true
       },
       orderBy: { createdAt: 'desc' }
     });

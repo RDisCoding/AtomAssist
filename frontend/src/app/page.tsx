@@ -14,8 +14,8 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (email !== 'agent@atomberg.com') {
-      alert('For demo purposes, only agent@atomberg.com is allowed.');
+    if (email !== 'agent@atomberg.com' && email !== 'admin@atomberg.com') {
+      alert('For demo purposes, only agent@atomberg.com or admin@atomberg.com are allowed.');
       return;
     }
     setLoading(true);
@@ -31,7 +31,11 @@ export default function LoginPage() {
         const data = await res.json();
         localStorage.setItem('token', data.token);
         localStorage.setItem('user', JSON.stringify(data.user));
-        router.push('/dashboard');
+        if (data.user.role === 'ADMIN') {
+          router.push('/admin');
+        } else {
+          router.push('/dashboard');
+        }
       } else {
         const errData = await res.json();
         alert(errData.error || 'Login failed');

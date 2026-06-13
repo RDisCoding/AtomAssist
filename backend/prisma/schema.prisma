@@ -9,6 +9,7 @@ datasource db {
 enum Role {
   AGENT
   CUSTOMER
+  ADMIN
 }
 
 model User {

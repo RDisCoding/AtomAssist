@@ -138,7 +138,9 @@ io.on('connection', (socket) => {
     const user = (socket as any).user;
     if (user && sessionId && (content.trim() || attachment)) {
       try {
-        let fileUrl, fileType, fileName;
+        let fileUrl: string | undefined;
+        let fileType: string | undefined;
+        let fileName: string | undefined;
         
         if (attachment) {
           const matches = attachment.data.match(/^data:(.+);base64,(.+)$/);

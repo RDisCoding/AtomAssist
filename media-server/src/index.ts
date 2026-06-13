@@ -7,6 +7,7 @@ import * as mediasoup from 'mediasoup';
 const app = express();
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
+  path: '/media/socket.io/',
   cors: { origin: '*', methods: ['GET', 'POST'] }
 });
 

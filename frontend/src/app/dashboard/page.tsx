@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Users, Clock, MonitorPlay, LogOut, Copy, Plus, Activity } from 'lucide-react';
+import { ThemeToggle } from '@/components/theme-toggle';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -72,19 +73,20 @@ export default function DashboardPage() {
   const activeCount = sessions.filter(s => s.status === 'ACTIVE').length;
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
+    <div className="min-h-screen bg-gray-50 dark:bg-background flex flex-col font-sans transition-colors duration-300">
       {/* Top Navigation */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
+      <header className="bg-white dark:bg-card border-b border-gray-200 dark:border-border sticky top-0 z-10 transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-black rounded-md flex items-center justify-center">
-                <span className="font-bold text-primary">A</span>
+              <div className="w-8 h-8 bg-black dark:bg-primary rounded-md flex items-center justify-center">
+                <span className="font-bold text-primary dark:text-black">A</span>
               </div>
-              <span className="text-xl font-bold tracking-tight text-gray-900">AtomAssist <span className="text-sm font-medium text-gray-500 ml-2">Agent Portal</span></span>
+              <span className="text-xl font-bold tracking-tight text-gray-900 dark:text-foreground">AtomAssist <span className="text-sm font-medium text-gray-500 dark:text-gray-400 ml-2">Agent Portal</span></span>
             </div>
             <div className="flex items-center gap-4">
-              <Button variant="outline" className="gap-2 border-gray-300 hover:bg-gray-100 transition-colors rounded-full px-5" onClick={() => {
+              <ThemeToggle />
+              <Button variant="outline" className="gap-2 border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors rounded-full px-5 text-gray-900 dark:text-gray-100" onClick={() => {
                 localStorage.clear();
                 router.push('/');
               }}>
@@ -110,44 +112,44 @@ export default function DashboardPage() {
 
         {/* Metrics */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Card className="border-0 shadow-md bg-white hover:shadow-lg transition-shadow">
+          <Card className="border-0 shadow-md bg-white dark:bg-card hover:shadow-lg transition-shadow">
             <CardContent className="p-6 flex flex-col justify-center relative overflow-hidden">
               <div className="flex items-center justify-between z-10">
-                <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Active Sessions</h3>
-                <div className="p-2 bg-green-50 rounded-lg"><Activity className="w-5 h-5 text-green-600" /></div>
+                <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Active Sessions</h3>
+                <div className="p-2 bg-green-50 dark:bg-green-900/20 rounded-lg"><Activity className="w-5 h-5 text-green-600 dark:text-green-400" /></div>
               </div>
-              <p className="text-4xl font-black mt-4 text-gray-900 z-10">{activeCount}</p>
-              <div className="absolute -bottom-4 -right-4 w-24 h-24 bg-green-50 rounded-full blur-xl"></div>
+              <p className="text-4xl font-black mt-4 text-gray-900 dark:text-foreground z-10">{activeCount}</p>
+              <div className="absolute -bottom-4 -right-4 w-24 h-24 bg-green-50 dark:bg-green-900/10 rounded-full blur-xl"></div>
             </CardContent>
           </Card>
-          <Card className="border-0 shadow-md bg-white hover:shadow-lg transition-shadow">
+          <Card className="border-0 shadow-md bg-white dark:bg-card hover:shadow-lg transition-shadow">
             <CardContent className="p-6 flex flex-col justify-center relative overflow-hidden">
               <div className="flex items-center justify-between z-10">
-                <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Customers Today</h3>
-                <div className="p-2 bg-blue-50 rounded-lg"><Users className="w-5 h-5 text-blue-600" /></div>
+                <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Customers Today</h3>
+                <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg"><Users className="w-5 h-5 text-blue-600 dark:text-blue-400" /></div>
               </div>
-              <p className="text-4xl font-black mt-4 text-gray-900 z-10">{sessions.length}</p>
-              <div className="absolute -bottom-4 -right-4 w-24 h-24 bg-blue-50 rounded-full blur-xl"></div>
+              <p className="text-4xl font-black mt-4 text-gray-900 dark:text-foreground z-10">{sessions.length}</p>
+              <div className="absolute -bottom-4 -right-4 w-24 h-24 bg-blue-50 dark:bg-blue-900/10 rounded-full blur-xl"></div>
             </CardContent>
           </Card>
-          <Card className="border-0 shadow-md bg-white hover:shadow-lg transition-shadow">
+          <Card className="border-0 shadow-md bg-white dark:bg-card hover:shadow-lg transition-shadow">
             <CardContent className="p-6 flex flex-col justify-center relative overflow-hidden">
               <div className="flex items-center justify-between z-10">
-                <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Avg Resolution</h3>
-                <div className="p-2 bg-orange-50 rounded-lg"><Clock className="w-5 h-5 text-orange-600" /></div>
+                <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Avg Resolution</h3>
+                <div className="p-2 bg-orange-50 dark:bg-orange-900/20 rounded-lg"><Clock className="w-5 h-5 text-orange-600 dark:text-orange-400" /></div>
               </div>
-              <p className="text-4xl font-black mt-4 text-gray-900 z-10">4m 12s</p>
-              <div className="absolute -bottom-4 -right-4 w-24 h-24 bg-orange-50 rounded-full blur-xl"></div>
+              <p className="text-4xl font-black mt-4 text-gray-900 dark:text-foreground z-10">4m 12s</p>
+              <div className="absolute -bottom-4 -right-4 w-24 h-24 bg-orange-50 dark:bg-orange-900/10 rounded-full blur-xl"></div>
             </CardContent>
           </Card>
-          <Card className="border-0 shadow-md bg-white hover:shadow-lg transition-shadow">
+          <Card className="border-0 shadow-md bg-white dark:bg-card hover:shadow-lg transition-shadow">
             <CardContent className="p-6 flex flex-col justify-center relative overflow-hidden">
               <div className="flex items-center justify-between z-10">
-                <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Online Agents</h3>
-                <div className="p-2 bg-purple-50 rounded-lg"><MonitorPlay className="w-5 h-5 text-purple-600" /></div>
+                <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Online Agents</h3>
+                <div className="p-2 bg-purple-50 dark:bg-purple-900/20 rounded-lg"><MonitorPlay className="w-5 h-5 text-purple-600 dark:text-purple-400" /></div>
               </div>
-              <p className="text-4xl font-black mt-4 text-gray-900 z-10">1</p>
-              <div className="absolute -bottom-4 -right-4 w-24 h-24 bg-purple-50 rounded-full blur-xl"></div>
+              <p className="text-4xl font-black mt-4 text-gray-900 dark:text-foreground z-10">1</p>
+              <div className="absolute -bottom-4 -right-4 w-24 h-24 bg-purple-50 dark:bg-purple-900/10 rounded-full blur-xl"></div>
             </CardContent>
           </Card>
         </div>
@@ -156,19 +158,19 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
           
           {/* Create Session */}
-          <Card className="lg:col-span-1 sticky top-24 shadow-sm border-gray-200">
-            <CardHeader className="bg-gray-50 border-b border-gray-100 pb-4">
-              <CardTitle className="text-lg text-gray-900">New Session</CardTitle>
-              <CardDescription>Generate an invite link for a customer.</CardDescription>
+          <Card className="lg:col-span-1 sticky top-24 shadow-sm border-gray-200 dark:border-border dark:bg-card transition-colors">
+            <CardHeader className="bg-gray-50 dark:bg-muted border-b border-gray-100 dark:border-border pb-4">
+              <CardTitle className="text-lg text-gray-900 dark:text-foreground">New Session</CardTitle>
+              <CardDescription className="dark:text-muted-foreground">Generate an invite link for a customer.</CardDescription>
             </CardHeader>
             <CardContent className="pt-6 space-y-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Issue Description</label>
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Issue Description</label>
                 <Input 
                   placeholder="e.g. Broken Ceiling Fan" 
                   value={newSessionTitle}
                   onChange={(e) => setNewSessionTitle(e.target.value)}
-                  className="w-full border-gray-300 focus:border-primary focus:ring-primary"
+                  className="w-full border-gray-300 dark:border-gray-600 focus:border-primary focus:ring-primary dark:bg-background"
                 />
               </div>
               <Button 
@@ -181,18 +183,18 @@ export default function DashboardPage() {
           </Card>
 
           {/* Session List */}
-          <Card className="lg:col-span-2 shadow-sm border-gray-200 overflow-hidden">
-            <CardHeader className="bg-white border-b border-gray-100 pb-4">
-              <CardTitle className="text-lg text-gray-900">Session History</CardTitle>
+          <Card className="lg:col-span-2 shadow-sm border-gray-200 dark:border-border dark:bg-card overflow-hidden transition-colors">
+            <CardHeader className="bg-white dark:bg-card border-b border-gray-100 dark:border-border pb-4">
+              <CardTitle className="text-lg text-gray-900 dark:text-foreground">Session History</CardTitle>
             </CardHeader>
             <div className="overflow-x-auto">
               <Table>
-                <TableHeader className="bg-gray-50">
-                  <TableRow>
-                    <TableHead className="w-[300px] font-semibold text-gray-600">Issue</TableHead>
-                    <TableHead className="font-semibold text-gray-600 hidden sm:table-cell">Participants</TableHead>
-                    <TableHead className="font-semibold text-gray-600">Status</TableHead>
-                    <TableHead className="text-right font-semibold text-gray-600">Actions</TableHead>
+                <TableHeader className="bg-gray-50 dark:bg-muted">
+                  <TableRow className="dark:border-border">
+                    <TableHead className="w-[300px] font-semibold text-gray-600 dark:text-gray-300">Issue</TableHead>
+                    <TableHead className="font-semibold text-gray-600 dark:text-gray-300 hidden sm:table-cell">Participants</TableHead>
+                    <TableHead className="font-semibold text-gray-600 dark:text-gray-300">Status</TableHead>
+                    <TableHead className="text-right font-semibold text-gray-600 dark:text-gray-300">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>

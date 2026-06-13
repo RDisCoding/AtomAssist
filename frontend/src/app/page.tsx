@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ArrowRight, ShieldCheck } from 'lucide-react';
+import { ThemeToggle } from '@/components/theme-toggle';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -49,26 +50,29 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
+    <div className="min-h-screen bg-gray-50 dark:bg-background flex flex-col font-sans transition-colors duration-300">
       
       {/* Top Navbar */}
-      <header className="bg-white border-b border-gray-200">
+      <header className="bg-white dark:bg-card border-b border-gray-200 dark:border-border transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center h-16 gap-2">
-            <div className="w-8 h-8 bg-primary rounded-md flex items-center justify-center">
-              <span className="font-bold text-black">A</span>
+          <div className="flex items-center h-16 justify-between w-full">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-primary rounded-md flex items-center justify-center">
+                <span className="font-bold text-black">A</span>
+              </div>
+              <span className="text-xl font-bold tracking-tight text-gray-900 dark:text-foreground">AtomAssist</span>
+              <span className="ml-2 text-xs font-semibold bg-gray-100 dark:bg-muted text-gray-600 dark:text-muted-foreground px-2 py-1 rounded-full uppercase tracking-wider">Agent Portal</span>
             </div>
-            <span className="text-xl font-bold tracking-tight text-gray-900">AtomAssist</span>
-            <span className="ml-2 text-xs font-semibold bg-gray-100 text-gray-600 px-2 py-1 rounded-full uppercase tracking-wider">Agent Portal</span>
+            <ThemeToggle />
           </div>
         </div>
       </header>
 
       {/* Main Content */}
       <main className="flex-1 flex items-center justify-center p-4">
-        <div className="w-full max-w-md bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+        <div className="w-full max-w-md bg-white dark:bg-card rounded-2xl shadow-xl border border-gray-100 dark:border-border overflow-hidden transition-colors duration-300">
           
-          <div className="p-8 pb-6 text-center space-y-2 bg-gray-900 text-white relative overflow-hidden">
+          <div className="p-8 pb-6 text-center space-y-2 bg-gray-900 dark:bg-muted text-white dark:text-foreground relative overflow-hidden">
             <div className="absolute top-0 left-0 w-full h-1 bg-primary"></div>
             <ShieldCheck className="w-10 h-10 mx-auto text-primary mb-4" />
             <h1 className="text-2xl font-bold tracking-tight">Secure Login</h1>
@@ -77,27 +81,27 @@ export default function LoginPage() {
 
           <form onSubmit={handleLogin} className="p-8 space-y-6">
             <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-semibold text-gray-700">Work Email</label>
+              <label htmlFor="email" className="text-sm font-semibold text-gray-700 dark:text-muted-foreground">Work Email</label>
               <Input
                 id="email"
                 type="email"
                 placeholder="agent@atomberg.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="h-12 border-gray-200 focus:border-primary focus:ring-primary text-base"
+                className="h-12 border-gray-200 dark:border-border dark:bg-background focus:border-primary focus:ring-primary text-base transition-colors"
                 required
               />
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="password" className="text-sm font-semibold text-gray-700">Password</label>
+              <label htmlFor="password" className="text-sm font-semibold text-gray-700 dark:text-muted-foreground">Password</label>
               <Input
                 id="password"
                 type="password"
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="h-12 border-gray-200 focus:border-primary focus:ring-primary text-base"
+                className="h-12 border-gray-200 dark:border-border dark:bg-background focus:border-primary focus:ring-primary text-base transition-colors"
                 required
               />
             </div>
@@ -105,7 +109,7 @@ export default function LoginPage() {
             <Button 
               type="submit" 
               disabled={loading}
-              className="w-full h-12 bg-black hover:bg-gray-800 text-white font-semibold text-base transition-colors flex items-center justify-center gap-2 mt-4"
+              className="w-full h-12 bg-black dark:bg-primary hover:bg-gray-800 dark:hover:bg-primary/90 text-white dark:text-black font-semibold text-base transition-colors flex items-center justify-center gap-2 mt-4"
             >
               {loading ? 'Authenticating...' : (
                 <>

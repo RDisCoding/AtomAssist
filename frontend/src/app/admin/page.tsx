@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { ThemeToggle } from '@/components/theme-toggle';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Activity, Users, Clock, ShieldAlert, CheckCircle2, XCircle, Video, Paperclip, LogOut, Info, BarChart2, TrendingUp } from 'lucide-react';
@@ -102,17 +103,18 @@ export default function AdminDashboardPage() {
     <div className="min-h-screen bg-gray-50 flex flex-col font-sans pb-10">
       
       {/* Top Navigation */}
-      <header className="bg-[#111111] border-b border-gray-800 sticky top-0 z-10 text-white shadow-md">
+      <header className="bg-[#111111] dark:bg-card border-b border-gray-800 dark:border-border sticky top-0 z-10 text-white shadow-md transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 bg-primary rounded-md flex items-center justify-center">
                 <span className="font-bold text-black">A</span>
               </div>
-              <span className="text-xl font-bold tracking-tight text-white">AtomAssist <span className="font-light text-gray-400">| OpsCenter</span></span>
+              <span className="text-xl font-bold tracking-tight text-white dark:text-foreground">AtomAssist <span className="font-light text-gray-400 dark:text-muted-foreground">| OpsCenter</span></span>
             </div>
             <div className="flex items-center gap-4">
-              <Button onClick={handleLogout} variant="ghost" className="text-gray-300 hover:text-white hover:bg-gray-800">
+              <ThemeToggle />
+              <Button onClick={handleLogout} variant="ghost" className="text-gray-300 dark:text-gray-400 hover:text-white dark:hover:text-foreground hover:bg-gray-800 dark:hover:bg-muted">
                 <LogOut className="w-4 h-4 mr-2" /> Logout
               </Button>
             </div>
@@ -179,18 +181,18 @@ export default function AdminDashboardPage() {
         </div>
 
         {/* Analytics Chart Row */}
-        <Card className="border-gray-200 shadow-sm overflow-hidden">
-          <CardHeader className="bg-white border-b border-gray-100 pb-4 flex flex-row items-center justify-between">
+        <Card className="border-gray-200 dark:border-border shadow-sm overflow-hidden bg-white dark:bg-card">
+          <CardHeader className="bg-white dark:bg-card border-b border-gray-100 dark:border-border pb-4 flex flex-row items-center justify-between">
             <div>
-              <CardTitle className="text-lg text-gray-900">Platform Analytics</CardTitle>
-              <CardDescription>Visualize system usage and performance</CardDescription>
+              <CardTitle className="text-lg text-gray-900 dark:text-foreground">Platform Analytics</CardTitle>
+              <CardDescription className="dark:text-muted-foreground">Visualize system usage and performance</CardDescription>
             </div>
-            <div className="flex bg-gray-100 p-1 rounded-lg">
+            <div className="flex bg-gray-100 dark:bg-muted p-1 rounded-lg">
               <Button 
                 variant={activeChart === 'volume' ? 'default' : 'ghost'} 
                 size="sm" 
                 onClick={() => setActiveChart('volume')}
-                className={`text-xs ${activeChart === 'volume' ? 'bg-white text-black shadow-sm' : 'text-gray-600'}`}
+                className={`text-xs ${activeChart === 'volume' ? 'bg-white dark:bg-background text-black dark:text-foreground shadow-sm' : 'text-gray-600 dark:text-muted-foreground'}`}
               >
                 <TrendingUp className="w-3 h-3 mr-1" /> Volume
               </Button>
@@ -198,13 +200,13 @@ export default function AdminDashboardPage() {
                 variant={activeChart === 'duration' ? 'default' : 'ghost'} 
                 size="sm" 
                 onClick={() => setActiveChart('duration')}
-                className={`text-xs ${activeChart === 'duration' ? 'bg-white text-black shadow-sm' : 'text-gray-600'}`}
+                className={`text-xs ${activeChart === 'duration' ? 'bg-white dark:bg-background text-black dark:text-foreground shadow-sm' : 'text-gray-600 dark:text-muted-foreground'}`}
               >
                 <BarChart2 className="w-3 h-3 mr-1" /> Durations
               </Button>
             </div>
           </CardHeader>
-          <CardContent className="p-6 bg-gradient-to-b from-gray-50/50 to-white">
+          <CardContent className="p-6 bg-gradient-to-b from-gray-50/50 dark:from-muted/20 to-white dark:to-card">
             <div className="h-[300px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 {activeChart === 'volume' ? (
@@ -241,23 +243,23 @@ export default function AdminDashboardPage() {
         </Card>
 
         {/* Live Session Table */}
-        <Card className="shadow-sm border-gray-200">
-          <CardHeader className="bg-white border-b border-gray-100 pb-4 flex flex-row items-center justify-between">
+        <Card className="shadow-sm border-gray-200 dark:border-border bg-white dark:bg-card">
+          <CardHeader className="bg-white dark:bg-card border-b border-gray-100 dark:border-border pb-4 flex flex-row items-center justify-between">
             <div>
-              <CardTitle className="text-lg text-gray-900">Global Session Monitor</CardTitle>
-              <CardDescription>Click on any session to view detailed analytics and assets.</CardDescription>
+              <CardTitle className="text-lg text-gray-900 dark:text-foreground">Global Session Monitor</CardTitle>
+              <CardDescription className="dark:text-muted-foreground">Click on any session to view detailed analytics and assets.</CardDescription>
             </div>
-            <Badge variant="outline" className="bg-primary/10 text-primary-foreground border-primary/20">Live Polling</Badge>
+            <Badge variant="outline" className="bg-primary/10 text-primary-foreground border-primary/20 dark:border-primary/50">Live Polling</Badge>
           </CardHeader>
           <div className="overflow-x-auto">
             <Table>
-              <TableHeader className="bg-gray-50">
-                <TableRow>
-                  <TableHead className="w-[200px] font-semibold text-gray-600">Session</TableHead>
-                  <TableHead className="font-semibold text-gray-600">Agent</TableHead>
-                  <TableHead className="font-semibold text-gray-600">Customers</TableHead>
-                  <TableHead className="font-semibold text-gray-600">Status</TableHead>
-                  <TableHead className="text-right font-semibold text-gray-600">Action</TableHead>
+              <TableHeader className="bg-gray-50 dark:bg-muted">
+                <TableRow className="dark:border-border">
+                  <TableHead className="w-[200px] font-semibold text-gray-600 dark:text-gray-300">Session</TableHead>
+                  <TableHead className="font-semibold text-gray-600 dark:text-gray-300">Agent</TableHead>
+                  <TableHead className="font-semibold text-gray-600 dark:text-gray-300">Customers</TableHead>
+                  <TableHead className="font-semibold text-gray-600 dark:text-gray-300">Status</TableHead>
+                  <TableHead className="text-right font-semibold text-gray-600 dark:text-gray-300">Action</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -271,21 +273,21 @@ export default function AdminDashboardPage() {
                   sessions.map((session) => (
                     <TableRow 
                       key={session.id} 
-                      className="hover:bg-blue-50 cursor-pointer transition-colors"
+                      className="hover:bg-blue-50 dark:hover:bg-blue-900/10 cursor-pointer transition-colors dark:border-border"
                       onClick={() => setSelectedSession(session)}
                     >
                       <TableCell className="font-medium">
-                        <div className="text-sm text-gray-900 truncate max-w-[150px]">{session.title}</div>
-                        <div className="text-xs text-gray-500 mt-1 font-mono">{session.id.split('-')[0]}</div>
+                        <div className="text-sm text-gray-900 dark:text-gray-100 truncate max-w-[150px]">{session.title}</div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 font-mono">{session.id.split('-')[0]}</div>
                       </TableCell>
                       <TableCell>
-                        <span className="text-sm text-gray-700 font-medium">{session.agent.name}</span>
+                        <span className="text-sm text-gray-700 dark:text-gray-300 font-medium">{session.agent.name}</span>
                       </TableCell>
                       <TableCell>
                         {session.participants.length > 0 ? (
                           <div className="flex flex-wrap gap-1">
                             {session.participants.map((p: any) => (
-                              <Badge key={p.id} variant="outline" className="text-xs bg-white text-gray-600 border-gray-200">
+                              <Badge key={p.id} variant="outline" className="text-xs bg-white dark:bg-card text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-700">
                                 {p.name}
                               </Badge>
                             ))}
@@ -354,18 +356,18 @@ export default function AdminDashboardPage() {
             <div className="px-6 pb-6 sm:px-0 space-y-8 pt-6">
               
               {/* Meta Info */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-gray-50 p-4 rounded-xl border border-gray-100">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-gray-50 dark:bg-muted/50 p-4 rounded-xl border border-gray-100 dark:border-border">
                 <div>
-                  <p className="text-xs text-gray-500 mb-1">Session Title</p>
-                  <p className="text-sm font-semibold text-gray-900">{selectedSession.title}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Session Title</p>
+                  <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{selectedSession.title}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-500 mb-1">Agent</p>
-                  <p className="text-sm font-semibold text-gray-900">{selectedSession.agent.name}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Agent</p>
+                  <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{selectedSession.agent.name}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-500 mb-1">Date Created</p>
-                  <p className="text-sm font-semibold text-gray-900">{format(parseISO(selectedSession.createdAt), 'PPpp')}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Date Created</p>
+                  <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{format(parseISO(selectedSession.createdAt), 'PPpp')}</p>
                 </div>
                 <div>
                   <p className="text-xs text-gray-500 mb-1">Status</p>
@@ -380,44 +382,44 @@ export default function AdminDashboardPage() {
                 
                 {/* Recordings */}
                 <div>
-                  <h4 className="font-semibold text-gray-900 flex items-center gap-2 mb-3">
+                  <h4 className="font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2 mb-3">
                     <Video className="w-4 h-4 text-purple-500" /> Recordings ({selectedSession.recordings?.length || 0})
                   </h4>
                   {selectedSession.recordings?.length > 0 ? (
                     <div className="flex flex-col gap-2">
                       {selectedSession.recordings.map((rec: any, i: number) => (
-                        <a key={rec.id} href={`http://localhost:4000${rec.url}`} target="_blank" className="bg-white border border-gray-200 px-4 py-3 rounded-lg flex items-center justify-between hover:border-purple-300 transition-colors shadow-sm group">
-                          <span className="text-sm font-medium text-gray-700 group-hover:text-purple-700">Footage {i + 1}</span>
-                          <span className="text-xs bg-purple-50 text-purple-600 px-2 py-1 rounded">View WebM</span>
+                        <a key={rec.id} href={`http://localhost:4000${rec.url}`} target="_blank" className="bg-white dark:bg-card border border-gray-200 dark:border-border px-4 py-3 rounded-lg flex items-center justify-between hover:border-purple-300 dark:hover:border-purple-700 transition-colors shadow-sm group">
+                          <span className="text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-purple-700 dark:group-hover:text-purple-400">Footage {i + 1}</span>
+                          <span className="text-xs bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 px-2 py-1 rounded">View WebM</span>
                         </a>
                       ))}
                     </div>
                   ) : (
-                    <p className="text-sm text-gray-500 italic bg-gray-50 p-4 rounded-lg border border-dashed border-gray-200">No recordings saved for this session.</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 italic bg-gray-50 dark:bg-muted/30 p-4 rounded-lg border border-dashed border-gray-200 dark:border-border">No recordings saved for this session.</p>
                   )}
                 </div>
 
                 {/* Files Shared */}
                 <div>
-                  <h4 className="font-semibold text-gray-900 flex items-center gap-2 mb-3">
+                  <h4 className="font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2 mb-3">
                     <Paperclip className="w-4 h-4 text-blue-500" /> Files Shared ({selectedSession.messages?.filter((m: any) => m.fileUrl).length || 0})
                   </h4>
                   {selectedSession.messages?.filter((m: any) => m.fileUrl).length > 0 ? (
                     <div className="flex flex-col gap-2">
                       {selectedSession.messages.filter((m: any) => m.fileUrl).map((m: any) => (
-                        <div key={m.id} className="bg-white border border-gray-200 px-4 py-3 rounded-lg flex items-center justify-between hover:border-blue-300 transition-colors shadow-sm">
+                        <div key={m.id} className="bg-white dark:bg-card border border-gray-200 dark:border-border px-4 py-3 rounded-lg flex items-center justify-between hover:border-blue-300 dark:hover:border-blue-700 transition-colors shadow-sm">
                           <div className="flex flex-col">
-                            <span className="text-sm font-medium text-gray-800 truncate max-w-[200px]">{m.fileName}</span>
-                            <span className="text-xs text-gray-400 mt-0.5">from {m.sender.name}</span>
+                            <span className="text-sm font-medium text-gray-800 dark:text-gray-200 truncate max-w-[200px]">{m.fileName}</span>
+                            <span className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">from {m.sender.name}</span>
                           </div>
-                          <a href={`http://localhost:4000${m.fileUrl}`} target="_blank" className="text-xs bg-blue-50 text-blue-600 hover:bg-blue-100 font-semibold px-3 py-1.5 rounded transition-colors">
+                          <a href={`http://localhost:4000${m.fileUrl}`} target="_blank" className="text-xs bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/40 font-semibold px-3 py-1.5 rounded transition-colors">
                             Download
                           </a>
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <p className="text-sm text-gray-500 italic bg-gray-50 p-4 rounded-lg border border-dashed border-gray-200">No files were shared in chat.</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 italic bg-gray-50 dark:bg-muted/30 p-4 rounded-lg border border-dashed border-gray-200 dark:border-border">No files were shared in chat.</p>
                   )}
                 </div>
 
@@ -425,27 +427,27 @@ export default function AdminDashboardPage() {
 
               {/* Event Timeline */}
               <div>
-                <h4 className="font-semibold text-gray-900 flex items-center gap-2 mb-4">
-                  <Activity className="w-4 h-4 text-gray-500" /> Event Timeline
+                <h4 className="font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2 mb-4">
+                  <Activity className="w-4 h-4 text-gray-500 dark:text-gray-400" /> Event Timeline
                 </h4>
                 {selectedSession.events?.length > 0 ? (
-                  <div className="bg-gray-50 rounded-xl p-6 border border-gray-100 max-h-[300px] overflow-y-auto">
-                    <div className="relative border-l-2 border-gray-200 ml-3 space-y-6">
+                  <div className="bg-gray-50 dark:bg-muted/30 rounded-xl p-6 border border-gray-100 dark:border-border max-h-[300px] overflow-y-auto">
+                    <div className="relative border-l-2 border-gray-200 dark:border-gray-700 ml-3 space-y-6">
                       {selectedSession.events.map((ev: any) => (
                         <div key={ev.id} className="relative pl-6">
-                          <div className="absolute -left-[5px] top-1.5 w-2 h-2 rounded-full bg-primary ring-4 ring-white"></div>
+                          <div className="absolute -left-[5px] top-1.5 w-2 h-2 rounded-full bg-primary ring-4 ring-white dark:ring-card"></div>
                           <div className="flex flex-col">
-                            <span className="text-sm text-gray-800">
-                              <span className="font-semibold">{ev.payload?.name || 'System'}</span> triggered <span className="font-mono text-xs bg-gray-200 px-1 rounded">{ev.type}</span>
+                            <span className="text-sm text-gray-800 dark:text-gray-200">
+                              <span className="font-semibold">{ev.payload?.name || 'System'}</span> triggered <span className="font-mono text-xs bg-gray-200 dark:bg-gray-800 px-1 rounded">{ev.type}</span>
                             </span>
-                            <span className="text-xs text-gray-400 mt-1">{format(parseISO(ev.timestamp), 'hh:mm:ss a')}</span>
+                            <span className="text-xs text-gray-400 dark:text-gray-500 mt-1">{format(parseISO(ev.timestamp), 'hh:mm:ss a')}</span>
                           </div>
                         </div>
                       ))}
                     </div>
                   </div>
                 ) : (
-                  <p className="text-sm text-gray-500 italic bg-gray-50 p-4 rounded-lg border border-dashed border-gray-200">No events recorded.</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 italic bg-gray-50 dark:bg-muted/30 p-4 rounded-lg border border-dashed border-gray-200 dark:border-border">No events recorded.</p>
                 )}
               </div>
 

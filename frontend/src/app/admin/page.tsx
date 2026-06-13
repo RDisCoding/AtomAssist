@@ -19,7 +19,7 @@ export default function AdminDashboardPage() {
 
   const fetchSessions = async () => {
     try {
-      const res = await fetch('http://localhost:4000/api/sessions/admin');
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/sessions/admin`);
       if (res.ok) {
         const data = await res.json();
         setSessions(data);

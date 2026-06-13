@@ -26,7 +26,7 @@ export default function DashboardPage() {
   }, [router]);
 
   const fetchSessions = async (authToken: string) => {
-    const res = await fetch('http://localhost:4000/api/sessions', {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/sessions`, {
       headers: { Authorization: `Bearer ${authToken}` }
     });
     if (res.ok) {
@@ -38,7 +38,7 @@ export default function DashboardPage() {
   const handleCreateSession = async () => {
     if (!newSessionTitle) return;
 
-    const res = await fetch('http://localhost:4000/api/sessions', {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/sessions`, {
       method: 'POST',
       headers: { 
         'Content-Type': 'application/json',

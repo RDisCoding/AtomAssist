@@ -1,0 +1,73 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  AGENT
+  CUSTOMER
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String
+  role      Role     @default(CUSTOMER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  sessionsCreated Session[]     @relation("AgentSessions")
+  participants    Participant[]
+  messages        Message[]
+  events          Event[]
+}
+
+model Session {
+  id          String   @id @default(uuid())
+  title       String
+  agentId     String
+  agent       User     @relation("AgentSessions", fields: [agentId], references: [id])
+  status      String   @default("ACTIVE") // ACTIVE, CLOSED
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  participants Participant[]
+  messages     Message[]
+  events       Event[]
+}
+
+model Participant {
+  id        String   @id @default(uuid())
+  sessionId String
+  session   Session  @relation(fields: [sessionId], references: [id])
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  joinedAt  DateTime @default(now())
+  leftAt    DateTime?
+
+  @@unique([sessionId, userId])
+}
+
+model Message {
+  id        String   @id @default(uuid())
+  sessionId String
+  session   Session  @relation(fields: [sessionId], references: [id])
+  senderId  String
+  sender    User     @relation(fields: [senderId], references: [id])
+  content   String
+  timestamp DateTime @default(now())
+}
+
+model Event {
+  id        String   @id @default(uuid())
+  sessionId String
+  session   Session  @relation(fields: [sessionId], references: [id])
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  type      String   // JOIN, LEAVE, ERROR, END_SESSION, RECONNECT
+  payload   Json?
+  timestamp DateTime @default(now())
+}

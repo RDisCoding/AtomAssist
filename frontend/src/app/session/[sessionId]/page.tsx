@@ -72,7 +72,7 @@ export default function SessionRoomPage({ params }: { params: Promise<{ sessionI
     setUser(parsedUser);
 
     const socket = io((process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'), { auth: { token }, query: { sessionId } });
-    const mSocket = io('http://localhost:5000', { auth: { user: parsedUser } });
+    const mSocket = io((process.env.NEXT_PUBLIC_MEDIA_URL || 'http://localhost:5000'), { auth: { user: parsedUser } });
 
     socket.on('connect', () => {
       setEvents(prev => [...prev, `Connected to support server.`]);

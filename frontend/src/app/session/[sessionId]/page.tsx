@@ -71,7 +71,7 @@ export default function SessionRoomPage({ params }: { params: Promise<{ sessionI
     const parsedUser = JSON.parse(storedUser);
     setUser(parsedUser);
 
-    const socket = io('http://localhost:4000', { auth: { token }, query: { sessionId } });
+    const socket = io((process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'), { auth: { token }, query: { sessionId } });
     const mSocket = io('http://localhost:5000', { auth: { user: parsedUser } });
 
     socket.on('connect', () => {
@@ -415,7 +415,7 @@ export default function SessionRoomPage({ params }: { params: Promise<{ sessionI
         reader.onloadend = async () => {
           const base64data = reader.result;
           const token = sessionStorage.getItem('token') || localStorage.getItem('token');
-          await fetch(`http://localhost:4000/api/sessions/${sessionId}/recording`, {
+          await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/api/sessions/${sessionId}/recording`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
             body: JSON.stringify({ videoData: base64data })
@@ -645,9 +645,9 @@ export default function SessionRoomPage({ params }: { params: Promise<{ sessionI
                           {msg.fileUrl && (
                             <div className="mt-2">
                               {msg.fileType?.startsWith('image/') ? (
-                                <img src={`http://localhost:4000${msg.fileUrl}`} alt={msg.fileName} className="max-w-[200px] rounded-md border border-white/20" />
+                                <img src={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}${msg.fileUrl}`} alt={msg.fileName} className="max-w-[200px] rounded-md border border-white/20" />
                               ) : (
-                                <a href={`http://localhost:4000${msg.fileUrl}`} target="_blank" className="flex items-center gap-1 text-blue-400 hover:underline break-all">
+                                <a href={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}${msg.fileUrl}`} target="_blank" className="flex items-center gap-1 text-blue-400 hover:underline break-all">
                                   <Paperclip className="w-4 h-4 flex-shrink-0" /> {msg.fileName}
                                 </a>
                               )}

@@ -63,7 +63,7 @@ export default function AdminDashboardPage() {
     if (!confirm('Are you sure you want to force end this session? All participants will be disconnected immediately.')) return;
     try {
       const token = localStorage.getItem('token');
-      await fetch(`http://localhost:4000/api/sessions/${sessionId}`, {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/api/sessions/${sessionId}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -386,7 +386,7 @@ export default function AdminDashboardPage() {
                   {selectedSession.recordings?.length > 0 ? (
                     <div className="flex flex-col gap-2">
                       {selectedSession.recordings.map((rec: any, i: number) => (
-                        <a key={rec.id} href={`http://localhost:4000${rec.url}`} target="_blank" className="bg-white border border-gray-200 px-4 py-3 rounded-lg flex items-center justify-between hover:border-purple-300 transition-colors shadow-sm group">
+                        <a key={rec.id} href={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}${rec.url}`} target="_blank" className="bg-white border border-gray-200 px-4 py-3 rounded-lg flex items-center justify-between hover:border-purple-300 transition-colors shadow-sm group">
                           <span className="text-sm font-medium text-gray-700 group-hover:text-purple-700">Footage {i + 1}</span>
                           <span className="text-xs bg-purple-50 text-purple-600 px-2 py-1 rounded">View WebM</span>
                         </a>
@@ -410,7 +410,7 @@ export default function AdminDashboardPage() {
                             <span className="text-sm font-medium text-gray-800 truncate max-w-[200px]">{m.fileName}</span>
                             <span className="text-xs text-gray-400 mt-0.5">from {m.sender.name}</span>
                           </div>
-                          <a href={`http://localhost:4000${m.fileUrl}`} target="_blank" className="text-xs bg-blue-50 text-blue-600 hover:bg-blue-100 font-semibold px-3 py-1.5 rounded transition-colors">
+                          <a href={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}${m.fileUrl}`} target="_blank" className="text-xs bg-blue-50 text-blue-600 hover:bg-blue-100 font-semibold px-3 py-1.5 rounded transition-colors">
                             Download
                           </a>
                         </div>

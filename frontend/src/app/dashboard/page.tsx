@@ -54,7 +54,7 @@ export default function DashboardPage() {
   };
 
   const handleEndSession = async (id: string) => {
-    const res = await fetch(`http://localhost:4000/api/sessions/${id}`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/api/sessions/${id}`, {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${token}` }
     });

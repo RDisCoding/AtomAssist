@@ -78,21 +78,18 @@ export default function DashboardPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-primary rounded-md flex items-center justify-center">
-                <span className="font-bold text-black">A</span>
+              <div className="w-8 h-8 bg-black rounded-md flex items-center justify-center">
+                <span className="font-bold text-primary">A</span>
               </div>
-              <span className="text-xl font-bold tracking-tight text-gray-900">AtomAssist</span>
+              <span className="text-xl font-bold tracking-tight text-gray-900">AtomAssist <span className="text-sm font-medium text-gray-500 ml-2">Agent Portal</span></span>
             </div>
             <div className="flex items-center gap-4">
-              <Button variant="ghost" className="text-gray-600 hidden md:flex" onClick={() => router.push('/admin')}>
-                Admin Panel
-              </Button>
-              <Button variant="outline" className="gap-2" onClick={() => {
+              <Button variant="outline" className="gap-2 border-gray-300 hover:bg-gray-100 transition-colors rounded-full px-5" onClick={() => {
                 localStorage.clear();
                 router.push('/');
               }}>
                 <LogOut className="w-4 h-4" />
-                <span className="hidden sm:inline">Logout</span>
+                <span className="hidden sm:inline font-medium">Secure Logout</span>
               </Button>
             </div>
           </div>
@@ -103,47 +100,54 @@ export default function DashboardPage() {
       <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full space-y-8">
         
         {/* Hero Section */}
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Customer Support Command Center</h1>
-          <p className="mt-2 text-sm text-gray-600">Manage your active support sessions and resolve customer issues via live video.</p>
+        <div className="bg-gradient-to-r from-gray-900 to-gray-800 rounded-2xl p-8 sm:p-12 text-white shadow-xl relative overflow-hidden">
+          <div className="relative z-10">
+            <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">Customer Support Command Center</h1>
+            <p className="mt-3 text-lg text-gray-300 max-w-2xl">Manage your active support sessions, dispatch secure links, and resolve customer issues via live diagnostic video.</p>
+          </div>
+          <div className="absolute right-0 top-0 w-64 h-64 bg-primary/20 blur-3xl rounded-full transform translate-x-1/2 -translate-y-1/4"></div>
         </div>
 
         {/* Metrics */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card>
-            <CardContent className="p-6 flex flex-col justify-center">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-medium text-gray-500">Active Sessions</h3>
-                <Activity className="w-4 h-4 text-primary" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <Card className="border-0 shadow-md bg-white hover:shadow-lg transition-shadow">
+            <CardContent className="p-6 flex flex-col justify-center relative overflow-hidden">
+              <div className="flex items-center justify-between z-10">
+                <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Active Sessions</h3>
+                <div className="p-2 bg-green-50 rounded-lg"><Activity className="w-5 h-5 text-green-600" /></div>
               </div>
-              <p className="text-3xl font-bold mt-2 text-gray-900">{activeCount}</p>
+              <p className="text-4xl font-black mt-4 text-gray-900 z-10">{activeCount}</p>
+              <div className="absolute -bottom-4 -right-4 w-24 h-24 bg-green-50 rounded-full blur-xl"></div>
             </CardContent>
           </Card>
-          <Card>
-            <CardContent className="p-6 flex flex-col justify-center">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-medium text-gray-500">Customers Served Today</h3>
-                <Users className="w-4 h-4 text-blue-500" />
+          <Card className="border-0 shadow-md bg-white hover:shadow-lg transition-shadow">
+            <CardContent className="p-6 flex flex-col justify-center relative overflow-hidden">
+              <div className="flex items-center justify-between z-10">
+                <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Customers Today</h3>
+                <div className="p-2 bg-blue-50 rounded-lg"><Users className="w-5 h-5 text-blue-600" /></div>
               </div>
-              <p className="text-3xl font-bold mt-2 text-gray-900">{sessions.length}</p>
+              <p className="text-4xl font-black mt-4 text-gray-900 z-10">{sessions.length}</p>
+              <div className="absolute -bottom-4 -right-4 w-24 h-24 bg-blue-50 rounded-full blur-xl"></div>
             </CardContent>
           </Card>
-          <Card>
-            <CardContent className="p-6 flex flex-col justify-center">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-medium text-gray-500">Avg Resolution Time</h3>
-                <Clock className="w-4 h-4 text-green-500" />
+          <Card className="border-0 shadow-md bg-white hover:shadow-lg transition-shadow">
+            <CardContent className="p-6 flex flex-col justify-center relative overflow-hidden">
+              <div className="flex items-center justify-between z-10">
+                <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Avg Resolution</h3>
+                <div className="p-2 bg-orange-50 rounded-lg"><Clock className="w-5 h-5 text-orange-600" /></div>
               </div>
-              <p className="text-3xl font-bold mt-2 text-gray-900">4m 12s</p>
+              <p className="text-4xl font-black mt-4 text-gray-900 z-10">4m 12s</p>
+              <div className="absolute -bottom-4 -right-4 w-24 h-24 bg-orange-50 rounded-full blur-xl"></div>
             </CardContent>
           </Card>
-          <Card>
-            <CardContent className="p-6 flex flex-col justify-center">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-medium text-gray-500">Online Agents</h3>
-                <MonitorPlay className="w-4 h-4 text-purple-500" />
+          <Card className="border-0 shadow-md bg-white hover:shadow-lg transition-shadow">
+            <CardContent className="p-6 flex flex-col justify-center relative overflow-hidden">
+              <div className="flex items-center justify-between z-10">
+                <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Online Agents</h3>
+                <div className="p-2 bg-purple-50 rounded-lg"><MonitorPlay className="w-5 h-5 text-purple-600" /></div>
               </div>
-              <p className="text-3xl font-bold mt-2 text-gray-900">1</p>
+              <p className="text-4xl font-black mt-4 text-gray-900 z-10">1</p>
+              <div className="absolute -bottom-4 -right-4 w-24 h-24 bg-purple-50 rounded-full blur-xl"></div>
             </CardContent>
           </Card>
         </div>

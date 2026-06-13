@@ -7,14 +7,15 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Activity, Users, Clock, ShieldAlert, CheckCircle2, XCircle, Video, Paperclip, LogOut, Info } from 'lucide-react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
+import { Activity, Users, Clock, ShieldAlert, CheckCircle2, XCircle, Video, Paperclip, LogOut, Info, BarChart2, TrendingUp } from 'lucide-react';
+import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
 import { format, differenceInMinutes, parseISO } from 'date-fns';
 
 export default function AdminDashboardPage() {
   const router = useRouter();
   const [sessions, setSessions] = useState<any[]>([]);
   const [selectedSession, setSelectedSession] = useState<any>(null);
+  const [activeChart, setActiveChart] = useState<'volume' | 'duration'>('volume');
 
   const fetchSessions = async () => {
     try {
@@ -83,10 +84,19 @@ export default function AdminDashboardPage() {
     : 0;
 
   // Graph Logic - Group by hour for today
-  const chartData = Array.from({ length: 24 }).map((_, i) => {
+  const volumeData = Array.from({ length: 24 }).map((_, i) => {
     const count = todaySessions.filter(s => parseISO(s.createdAt).getHours() === i).length;
     return { time: `${i}:00`, count };
   });
+
+  const durationData = closedSessions
+    .filter(s => new Date(s.createdAt).toDateString() === new Date().toDateString())
+    .map(s => ({
+      name: s.title.length > 15 ? s.title.substring(0, 15) + '...' : s.title,
+      duration: differenceInMinutes(parseISO(s.updatedAt), parseISO(s.createdAt))
+    }))
+    .sort((a, b) => b.duration - a.duration)
+    .slice(0, 10);
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col font-sans pb-10">
@@ -169,23 +179,62 @@ export default function AdminDashboardPage() {
         </div>
 
         {/* Analytics Chart Row */}
-        <Card className="border-gray-200 shadow-sm">
-          <CardHeader className="bg-white border-b border-gray-100 pb-4">
-            <CardTitle className="text-lg text-gray-900">Today's Call Volume Analytics</CardTitle>
-            <CardDescription>Number of sessions initiated per hour</CardDescription>
+        <Card className="border-gray-200 shadow-sm overflow-hidden">
+          <CardHeader className="bg-white border-b border-gray-100 pb-4 flex flex-row items-center justify-between">
+            <div>
+              <CardTitle className="text-lg text-gray-900">Platform Analytics</CardTitle>
+              <CardDescription>Visualize system usage and performance</CardDescription>
+            </div>
+            <div className="flex bg-gray-100 p-1 rounded-lg">
+              <Button 
+                variant={activeChart === 'volume' ? 'default' : 'ghost'} 
+                size="sm" 
+                onClick={() => setActiveChart('volume')}
+                className={`text-xs ${activeChart === 'volume' ? 'bg-white text-black shadow-sm' : 'text-gray-600'}`}
+              >
+                <TrendingUp className="w-3 h-3 mr-1" /> Volume
+              </Button>
+              <Button 
+                variant={activeChart === 'duration' ? 'default' : 'ghost'} 
+                size="sm" 
+                onClick={() => setActiveChart('duration')}
+                className={`text-xs ${activeChart === 'duration' ? 'bg-white text-black shadow-sm' : 'text-gray-600'}`}
+              >
+                <BarChart2 className="w-3 h-3 mr-1" /> Durations
+              </Button>
+            </div>
           </CardHeader>
-          <CardContent className="p-6">
-            <div className="h-[250px] w-full">
+          <CardContent className="p-6 bg-gradient-to-b from-gray-50/50 to-white">
+            <div className="h-[300px] w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#eee" />
-                  <XAxis dataKey="time" stroke="#888" fontSize={12} tickMargin={10} />
-                  <YAxis allowDecimals={false} stroke="#888" fontSize={12} />
-                  <RechartsTooltip 
-                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                  />
-                  <Line type="monotone" dataKey="count" stroke="#eab308" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} />
-                </LineChart>
+                {activeChart === 'volume' ? (
+                  <AreaChart data={volumeData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#eab308" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="#eab308" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
+                    <XAxis dataKey="time" stroke="#9ca3af" fontSize={12} tickMargin={10} axisLine={false} tickLine={false} />
+                    <YAxis allowDecimals={false} stroke="#9ca3af" fontSize={12} axisLine={false} tickLine={false} />
+                    <RechartsTooltip 
+                      contentStyle={{ borderRadius: '12px', border: '1px solid #f3f4f6', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                    />
+                    <Area type="monotone" dataKey="count" stroke="#eab308" strokeWidth={3} fillOpacity={1} fill="url(#colorCount)" activeDot={{ r: 6, strokeWidth: 0, fill: '#eab308' }} />
+                  </AreaChart>
+                ) : (
+                  <BarChart data={durationData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
+                    <XAxis dataKey="name" stroke="#9ca3af" fontSize={12} tickMargin={10} axisLine={false} tickLine={false} />
+                    <YAxis stroke="#9ca3af" fontSize={12} axisLine={false} tickLine={false} />
+                    <RechartsTooltip 
+                      contentStyle={{ borderRadius: '12px', border: '1px solid #f3f4f6', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                      cursor={{ fill: '#f9fafb' }}
+                    />
+                    <Bar dataKey="duration" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                )}
               </ResponsiveContainer>
             </div>
           </CardContent>
@@ -294,15 +343,15 @@ export default function AdminDashboardPage() {
 
       {/* Session Details Dialog */}
       <Dialog open={!!selectedSession} onOpenChange={(open) => !open && setSelectedSession(null)}>
-        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-xl border-b pb-4">
-              <Info className="w-5 h-5 text-primary" /> Session Intelligence
+        <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto p-0 sm:p-6 gap-0">
+          <DialogHeader className="px-6 py-4 sm:px-0 sm:py-0">
+            <DialogTitle className="flex items-center gap-2 text-2xl font-bold border-b pb-4">
+              <Info className="w-6 h-6 text-primary" /> Session Intelligence
             </DialogTitle>
           </DialogHeader>
           
           {selectedSession && (
-            <div className="space-y-8 pt-4">
+            <div className="px-6 pb-6 sm:px-0 space-y-8 pt-6">
               
               {/* Meta Info */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-gray-50 p-4 rounded-xl border border-gray-100">

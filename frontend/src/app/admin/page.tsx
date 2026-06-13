@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Activity, Users, Clock, ShieldAlert, CheckCircle2, XCircle } from 'lucide-react';
+import { Activity, Users, Clock, ShieldAlert, CheckCircle2, XCircle, Video, Download } from 'lucide-react';
 
 export default function AdminDashboardPage() {
   const router = useRouter();
@@ -197,6 +197,15 @@ export default function AdminDashboardPage() {
                             </div>
                           ) : (
                             <span className="text-xs text-gray-400 italic">Waiting...</span>
+                          )}
+                          {session.recordings?.length > 0 && (
+                            <div className="mt-2 flex flex-col gap-1">
+                              {session.recordings.map((rec: any, idx: number) => (
+                                <a key={rec.id} href={`http://localhost:4000${rec.url}`} target="_blank" className="flex items-center gap-1 text-xs text-primary hover:underline">
+                                  <Video className="w-3 h-3" /> Recording {idx + 1}
+                                </a>
+                              ))}
+                            </div>
                           )}
                         </TableCell>
                         <TableCell>

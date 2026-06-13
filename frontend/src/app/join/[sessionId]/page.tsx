@@ -25,7 +25,10 @@ export default function JoinSessionPage({ params }: { params: Promise<{ sessionI
         body: JSON.stringify({ email, password })
       });
 
-      if (!authRes.ok) throw new Error('Auth failed');
+      if (!authRes.ok) {
+        const errData = await authRes.json();
+        throw new Error(errData.error || 'Auth failed');
+      }
       
       const authData = await authRes.json();
       sessionStorage.setItem('token', authData.token);
@@ -34,9 +37,9 @@ export default function JoinSessionPage({ params }: { params: Promise<{ sessionI
       // 2. Redirect to session room
       router.push(`/session/${unwrappedParams.sessionId}`);
 
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      alert('Error joining session');
+      alert(err.message || 'Error joining session');
     } finally {
       setLoading(false);
     }

@@ -2,6 +2,8 @@ import express from 'express';
 import { authenticate, requireAgent, AuthRequest } from '../middleware/auth';
 import prisma from '../prisma';
 import { io } from '../index';
+import fs from 'fs';
+import path from 'path';
 
 const router = express.Router();
 
@@ -59,7 +61,8 @@ router.get('/admin', async (req, res) => {
     const sessions = await prisma.session.findMany({
       include: {
         agent: { select: { id: true, name: true, email: true } },
-        participants: { include: { user: { select: { id: true, name: true, role: true } } } }
+        participants: { include: { user: { select: { id: true, name: true, role: true } } } },
+        recordings: true
       },
       orderBy: { createdAt: 'desc' }
     });
@@ -101,6 +104,57 @@ router.delete('/:id', authenticate, async (req, res) => {
   } catch (error) {
     console.error('End session error:', error);
     res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Upload Recording (Agent only)
+router.post('/:id/recording', authenticate, async (req, res) => {
+  const { id } = req.params;
+  const { videoData } = req.body;
+
+  if (!id || !videoData) {
+    res.status(400).json({ error: 'Missing parameters' });
+    return;
+  }
+
+  try {
+    const matches = videoData.match(/^data:(.+);base64,(.+)$/);
+    if (!matches) {
+      res.status(400).json({ error: 'Invalid file format' });
+      return;
+    }
+    
+    const buffer = Buffer.from(matches[2], 'base64');
+    const fileName = `rec-${id}-${Date.now()}.webm`;
+    const uploadsDir = path.join(process.cwd(), 'uploads');
+    
+    if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir);
+    fs.writeFileSync(path.join(uploadsDir, fileName), buffer);
+    
+    const url = `/uploads/${fileName}`;
+
+    const recording = await prisma.recording.create({
+      data: { sessionId: id as string, url }
+    });
+    
+    res.json(recording);
+  } catch (error) {
+    console.error('Recording upload error:', error);
+    res.status(500).json({ error: 'Error saving recording' });
+  }
+});
+
+// Get Session with Recordings
+router.get('/:id', authenticate, async (req, res) => {
+  const { id } = req.params;
+  try {
+    const session = await prisma.session.findUnique({
+      where: { id: id as string },
+      include: { recordings: true, agent: { select: { id: true, name: true, email: true } } }
+    });
+    res.json(session);
+  } catch (error) {
+    res.status(500).json({ error: 'Error fetching session' });
   }
 });
 

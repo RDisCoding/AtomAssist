@@ -6,7 +6,7 @@ import { io, Socket } from 'socket.io-client';
 import * as mediasoupClient from 'mediasoup-client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Mic, MicOff, Video as VideoIcon, VideoOff, MessageSquare, Users as UsersIcon, PhoneOff, Clock, Activity, ChevronDown } from 'lucide-react';
+import { Mic, MicOff, Video as VideoIcon, VideoOff, MessageSquare, Users as UsersIcon, PhoneOff, Clock, Activity, ChevronDown, Paperclip, CircleDot, Square } from 'lucide-react';
 
 export default function SessionRoomPage({ params }: { params: Promise<{ sessionId: string }> }) {
   const router = useRouter();
@@ -20,6 +20,12 @@ export default function SessionRoomPage({ params }: { params: Promise<{ sessionI
   const [events, setEvents] = useState<string[]>([]);
   const [messages, setMessages] = useState<any[]>([]);
   const [chatInput, setChatInput] = useState('');
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  const [isRecording, setIsRecording] = useState(false);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
 
   // Media state
   const [device, setDevice] = useState<mediasoupClient.Device | null>(null);
@@ -362,9 +368,69 @@ export default function SessionRoomPage({ params }: { params: Promise<{ sessionI
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!chatInput.trim() || !mainSocket) return;
-    mainSocket.emit('send-message', { sessionId, content: chatInput });
-    setChatInput('');
+    if (!chatInput.trim() && !selectedFile) return;
+
+    if (selectedFile) {
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        const base64Data = evt.target?.result as string;
+        mainSocket?.emit('send-message', {
+          sessionId,
+          content: chatInput,
+          attachment: { name: selectedFile.name, data: base64Data }
+        });
+        setChatInput('');
+        setSelectedFile(null);
+        if (fileInputRef.current) fileInputRef.current.value = '';
+      };
+      reader.readAsDataURL(selectedFile);
+    } else {
+      mainSocket?.emit('send-message', { sessionId, content: chatInput });
+      setChatInput('');
+    }
+  };
+
+  const toggleRecording = async () => {
+    if (isRecording && mediaRecorderRef.current) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+      return;
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
+      const recorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
+      
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) chunksRef.current.push(e.data);
+      };
+
+      recorder.onstop = async () => {
+        const blob = new Blob(chunksRef.current, { type: 'video/webm' });
+        chunksRef.current = [];
+        stream.getTracks().forEach(t => t.stop());
+
+        const reader = new FileReader();
+        reader.readAsDataURL(blob);
+        reader.onloadend = async () => {
+          const base64data = reader.result;
+          const token = sessionStorage.getItem('token') || localStorage.getItem('token');
+          await fetch(`http://localhost:4000/api/sessions/${sessionId}/recording`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ videoData: base64data })
+          });
+          alert('Recording successfully uploaded and saved to the server!');
+        };
+      };
+
+      recorder.start();
+      mediaRecorderRef.current = recorder;
+      setIsRecording(true);
+    } catch (err) {
+      console.error('Recording failed:', err);
+      alert('Could not start recording. Screen sharing permission required.');
+    }
   };
 
   const formatTime = (seconds: number) => {
@@ -487,6 +553,17 @@ export default function SessionRoomPage({ params }: { params: Promise<{ sessionI
               <PhoneOff className="w-5 h-5 sm:w-6 sm:h-6" />
             </Button>
 
+            {user?.role === 'AGENT' && (
+              <Button 
+                onClick={toggleRecording} 
+                variant="outline" 
+                className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center border-none ${isRecording ? 'bg-red-500 hover:bg-red-600 text-white animate-pulse' : 'bg-gray-800 hover:bg-gray-700 text-white'}`}
+                title={isRecording ? "Stop Recording" : "Start Recording"}
+              >
+                {isRecording ? <Square className="w-5 h-5 sm:w-6 sm:h-6 fill-white" /> : <CircleDot className="w-5 h-5 sm:w-6 sm:h-6" />}
+              </Button>
+            )}
+
             <div className="w-px h-8 bg-gray-800 mx-2 hidden sm:block"></div>
 
             <Button 
@@ -565,6 +642,17 @@ export default function SessionRoomPage({ params }: { params: Promise<{ sessionI
                         <span className="text-[10px] text-gray-500 mb-1 px-1">{msg.sender.name}</span>
                         <div className={`px-4 py-2 rounded-2xl max-w-[85%] text-sm ${isMe ? 'bg-primary text-black rounded-tr-sm' : 'bg-gray-800 text-gray-100 rounded-tl-sm'}`}>
                           {msg.content}
+                          {msg.fileUrl && (
+                            <div className="mt-2">
+                              {msg.fileType?.startsWith('image/') ? (
+                                <img src={`http://localhost:4000${msg.fileUrl}`} alt={msg.fileName} className="max-w-[200px] rounded-md border border-white/20" />
+                              ) : (
+                                <a href={`http://localhost:4000${msg.fileUrl}`} target="_blank" className="flex items-center gap-1 text-blue-400 hover:underline break-all">
+                                  <Paperclip className="w-4 h-4 flex-shrink-0" /> {msg.fileName}
+                                </a>
+                              )}
+                            </div>
+                          )}
                         </div>
                       </div>
                     );
@@ -572,7 +660,27 @@ export default function SessionRoomPage({ params }: { params: Promise<{ sessionI
                   <div ref={messagesEndRef} />
                 </div>
                 <div className="p-4 border-t border-gray-800 bg-[#1A1A1A]">
+                  {selectedFile && (
+                    <div className="mb-2 text-xs text-gray-400 flex items-center justify-between bg-gray-800 p-2 rounded">
+                      <span className="truncate">{selectedFile.name}</span>
+                      <button onClick={() => { setSelectedFile(null); if (fileInputRef.current) fileInputRef.current.value = ''; }} className="text-red-400 hover:text-red-300">Remove</button>
+                    </div>
+                  )}
                   <form onSubmit={handleSendMessage} className="flex gap-2">
+                    <input 
+                      type="file" 
+                      ref={fileInputRef} 
+                      className="hidden" 
+                      onChange={e => setSelectedFile(e.target.files?.[0] || null)} 
+                    />
+                    <Button 
+                      type="button" 
+                      onClick={() => fileInputRef.current?.click()} 
+                      variant="ghost" 
+                      className="px-2 hover:bg-gray-800 text-gray-400 hover:text-gray-200"
+                    >
+                      <Paperclip className="w-5 h-5" />
+                    </Button>
                     <Input 
                       placeholder="Type a message..." 
                       value={chatInput}

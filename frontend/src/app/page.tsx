@@ -33,7 +33,8 @@ export default function LoginPage() {
         localStorage.setItem('user', JSON.stringify(data.user));
         router.push('/dashboard');
       } else {
-        alert('Login failed');
+        const errData = await res.json();
+        alert(errData.error || 'Login failed');
       }
     } catch (err) {
       console.error(err);

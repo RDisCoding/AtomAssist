@@ -37,6 +37,7 @@ model Session {
   participants Participant[]
   messages     Message[]
   events       Event[]
+  recordings   Recording[]
 }
 
 model Participant {
@@ -58,7 +59,18 @@ model Message {
   senderId  String
   sender    User     @relation(fields: [senderId], references: [id])
   content   String
+  fileUrl   String?
+  fileType  String?
+  fileName  String?
   timestamp DateTime @default(now())
+}
+
+model Recording {
+  id        String   @id @default(uuid())
+  sessionId String
+  session   Session  @relation(fields: [sessionId], references: [id])
+  url       String
+  createdAt DateTime @default(now())
 }
 
 model Event {

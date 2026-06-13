@@ -1,0 +1,830 @@
+PROJECT NAME: AtomAssist
+TAGLINE: "Visual Customer Support for Faster Resolution."
+
+======================================================================
+PROJECT OBJECTIVE
+======================================================================
+
+We are building AtomAssist, a customer support platform for Atomberg that enables
+real-time video-assisted troubleshooting between support agents and customers.
+
+IMPORTANT:
+
+Do NOT treat this as a video calling application.
+
+Treat this as a customer support platform that uses video as one of its tools.
+
+The final judging criteria are heavily focused on:
+
+- Functionality
+- Reliability
+- Architecture
+- User Experience
+- Code Quality
+- Operational Readiness
+
+The architecture already exists and should NOT be rewritten.
+
+Current Stack:
+
+- Next.js Frontend
+- Express Backend
+- PostgreSQL + Prisma
+- Socket.IO
+- Mediasoup SFU
+- JWT Authentication
+- RBAC
+- Session Management
+- Chat Persistence
+
+Focus only on:
+
+1. UI/UX Improvements
+2. Mobile Responsiveness
+3. Bug Fixing
+4. Reliability
+5. Feature Completion
+6. Demo Readiness
+
+======================================================================
+PHASE 1 — COMPLETE UI / UX OVERHAUL
+======================================================================
+
+Current Issues:
+
+- Empty layouts
+- Excess whitespace
+- Generic styling
+- No Atomberg identity
+- Feels like a developer dashboard
+- Doesn't feel like a production support product
+
+======================================================================
+BRANDING SYSTEM
+======================================================================
+
+Use Atomberg-inspired colors.
+
+Primary:
+#FFC72C
+
+Black:
+#111111
+
+Dark Gray:
+#1E1E1E
+
+Background:
+#F8F8F8
+
+Borders:
+#E5E5E5
+
+White:
+#FFFFFF
+
+Success:
+#22C55E
+
+Warning:
+#F59E0B
+
+Error:
+#EF4444
+
+Avoid:
+
+- Gradients
+- Neon colors
+- Purple themes
+- Excessive shadows
+- Glassmorphism
+- Startup-style flashy effects
+
+Design Inspiration:
+
+- Stripe Dashboard
+- Linear
+- Notion
+- Tesla
+- Modern Enterprise SaaS
+
+Professional.
+Minimal.
+Clean.
+Industrial.
+
+======================================================================
+AGENT DASHBOARD REDESIGN
+======================================================================
+
+Top Navigation:
+
+- AtomAssist Logo
+- Dashboard
+- Active Sessions
+- Session History
+- Admin
+- Profile
+- Logout
+
+Hero Section:
+
+Title:
+Customer Support Command Center
+
+Subtitle:
+Manage customer support sessions and resolve issues faster.
+
+---------------------------------------------------------------------
+
+Metrics Section
+
+Display cards:
+
+- Active Sessions
+- Customers Served Today
+- Average Resolution Time
+- Online Agents
+
+---------------------------------------------------------------------
+
+Create Session Card
+
+Fields:
+
+- Issue Title
+- Category
+- Priority
+- Create Session
+
+---------------------------------------------------------------------
+
+Session Table
+
+Columns:
+
+- Session Name
+- Status
+- Customer
+- Participants
+- Duration
+- Created At
+- Actions
+
+Actions:
+
+- Join
+- Copy Invite
+- End Session
+
+Status Badges:
+
+Green = Active
+
+Gray = Closed
+
+Red = Recording
+
+======================================================================
+CUSTOMER JOIN PAGE REDESIGN
+======================================================================
+
+Goal:
+
+The customer should feel like they are joining an official Atomberg support call.
+
+Layout:
+
+Desktop:
+
+Split Screen
+
+Left:
+
+- AtomAssist Branding
+- Support Illustration
+- Benefits
+
+Text:
+
+"Welcome to AtomAssist"
+
+"Connect securely with an Atomberg support specialist through live video support."
+
+Right:
+
+Join Form
+
+Display:
+
+- Session ID
+- Session Name
+- Agent Name (if available)
+
+Fields:
+
+- Customer Name
+- Email
+
+Button:
+
+Join Support Session
+
+======================================================================
+SUPPORT SESSION PAGE REDESIGN
+======================================================================
+
+Current layout wastes too much space.
+
+Redesign similar to:
+
+- Google Meet
+- Zoom
+- Microsoft Teams
+
+---------------------------------------------------------------------
+
+TOP BAR
+
+Display:
+
+- Session Name
+- Connection Status
+- Call Timer
+- Recording Status
+
+Connection States:
+
+🟢 Connected
+
+🟡 Reconnecting
+
+🔴 Disconnected
+
+---------------------------------------------------------------------
+
+MAIN AREA
+
+Dynamic Video Grid
+
+Requirements:
+
+- Auto resize
+- Multi participant support
+- Camera off placeholders
+- Mic muted indicators
+- Participant labels
+
+Video tiles should scale correctly.
+
+---------------------------------------------------------------------
+
+RIGHT SIDEBAR
+
+Tabs:
+
+- Chat
+- Participants
+- Events
+
+Participants Panel:
+
+Show:
+
+- Agent Badge
+- Customer Badge
+- Mic State
+- Camera State
+
+---------------------------------------------------------------------
+
+BOTTOM CONTROL BAR
+
+Buttons:
+
+- Start Camera
+- Stop Camera
+- Mute
+- Unmute
+- Share Screen
+- Stop Sharing
+- Chat
+- Participants
+- End Session
+
+Buttons should only appear when relevant.
+
+Example:
+
+If camera OFF
+
+Show:
+Start Camera
+
+If camera ON
+
+Show:
+Stop Camera
+
+======================================================================
+ADMIN COMMAND CENTER REDESIGN
+======================================================================
+
+Current admin page is too weak.
+
+Transform into a real operations dashboard.
+
+---------------------------------------------------------------------
+
+TOP METRICS
+
+- Active Sessions
+- Total Calls Today
+- Connected Participants
+- Average Call Duration
+
+---------------------------------------------------------------------
+
+LIVE SESSION TABLE
+
+Columns:
+
+- Session
+- Agent
+- Customer
+- Duration
+- Status
+- Participants
+
+Actions:
+
+- View Session
+- Force End Session
+
+---------------------------------------------------------------------
+
+REAL-TIME EVENTS PANEL
+
+Display:
+
+- Customer Joined
+- Agent Joined
+- Camera Enabled
+- Screen Share Started
+- Session Ended
+
+Live updates.
+
+No refresh required.
+
+======================================================================
+PHASE 2 — MOBILE RESPONSIVENESS (CRITICAL)
+======================================================================
+
+IMPORTANT:
+
+Customers are much more likely to join from phones than laptops.
+
+The entire platform must be mobile-first.
+
+Target Devices:
+
+- Android Chrome
+- iPhone Safari
+- Tablets
+- Desktop Browsers
+
+======================================================================
+MOBILE CUSTOMER JOIN PAGE
+======================================================================
+
+Requirements:
+
+- Single column layout
+- Large touch targets
+- No horizontal scrolling
+- Full-width inputs
+- Full-width buttons
+
+Input Height:
+
+Minimum 48px
+
+Button Height:
+
+Minimum 48px
+
+Support:
+
+- Portrait Mode
+- Landscape Mode
+
+======================================================================
+MOBILE SESSION PAGE
+======================================================================
+
+Desktop:
+
+Video Area + Sidebar
+
+Mobile:
+
+Video Area
+↓
+Controls
+↓
+Drawer Panels
+
+Chat should become:
+
+- Bottom Sheet
+or
+- Slide Drawer
+
+Participants:
+
+- Modal
+or
+- Drawer
+
+Video should consume:
+
+70%-80% of screen height.
+
+Controls must be thumb-friendly.
+
+Bottom Controls:
+
+- Camera
+- Mic
+- Chat
+- Participants
+- End Session
+
+======================================================================
+MOBILE DASHBOARDS
+======================================================================
+
+Agent Dashboard:
+
+Desktop:
+Grid
+
+Mobile:
+Single Column
+
+---------------------------------------------------------------------
+
+Admin Dashboard:
+
+Desktop:
+Table
+
+Mobile:
+Card Layout
+
+No horizontal overflow.
+
+======================================================================
+RESPONSIVE TESTING
+======================================================================
+
+Test:
+
+- iPhone 14
+- iPhone SE
+- Samsung Galaxy
+- Pixel
+
+Verify:
+
+✓ Join flow
+
+✓ Camera permissions
+
+✓ Mic permissions
+
+✓ Chat
+
+✓ Video rendering
+
+✓ Responsive layout
+
+✓ Landscape mode
+
+✓ No hidden controls
+
+✓ No overflow
+
+======================================================================
+PHASE 3 — FUNCTIONAL TESTING
+======================================================================
+
+Create systematic testing checklist.
+
+======================================================================
+VIDEO TESTING
+======================================================================
+
+Verify:
+
+✓ Agent camera visible to customer
+
+✓ Customer camera visible to agent
+
+✓ Video toggle sync
+
+✓ Mic toggle sync
+
+✓ Screen share sync
+
+✓ Participant join
+
+✓ Participant leave
+
+✓ No duplicate streams
+
+✓ No black screens
+
+✓ No stale streams
+
+======================================================================
+CHAT TESTING
+======================================================================
+
+Verify:
+
+✓ Real-time delivery
+
+✓ Persistence
+
+✓ Session-specific messages
+
+✓ Correct sender
+
+✓ Refresh recovery
+
+✓ Reconnect recovery
+
+✓ No cross-session leakage
+
+======================================================================
+SESSION TESTING
+======================================================================
+
+Verify:
+
+✓ Create Session
+
+✓ Join Session
+
+✓ Leave Session
+
+✓ End Session
+
+✓ Invalid Session
+
+✓ Closed Session
+
+✓ Duplicate Join
+
+✓ Unauthorized Access
+
+======================================================================
+ADMIN TESTING
+======================================================================
+
+Verify:
+
+✓ Live participant tracking
+
+✓ Active session tracking
+
+✓ Force terminate
+
+✓ Session duration updates
+
+======================================================================
+PHASE 4 — FIX CRITICAL BUGS
+======================================================================
+
+BUG #1
+
+Remote video not rendering.
+
+Agent only sees own stream.
+
+Investigate:
+
+- Mediasoup consume()
+- consumer.track
+- stream creation
+- participant mapping
+- video element attachment
+
+Goal:
+
+Agent sees Customer
+
+Customer sees Agent
+
+======================================================================
+
+BUG #2
+
+Chat messages visible after relogging.
+
+Ensure:
+
+Messages are loaded by:
+
+sessionId
+
+only.
+
+No global retrieval.
+
+======================================================================
+
+BUG #3
+
+Mute / Unmute state unreliable.
+
+Implement:
+
+participant.mediaState
+
+Fields:
+
+- cameraEnabled
+- micEnabled
+- screenSharing
+
+Broadcast:
+
+media-state-updated
+
+======================================================================
+
+BUG #4
+
+Screen sharing unclear.
+
+Show only relevant controls.
+
+Hide inactive actions.
+
+======================================================================
+PHASE 5 — BONUS FEATURES
+======================================================================
+
+Priority Order:
+
+1. Reconnect Handling
+
+Store disconnect timestamp.
+
+Allow:
+
+30-second reconnect window.
+
+Restore:
+
+- Media
+- Chat
+- Presence
+
+without duplicates.
+
+---------------------------------------------------------------------
+
+2. Session History Page
+
+Show:
+
+- Participants
+- Duration
+- Timeline
+- Chat Logs
+- Session Metadata
+
+---------------------------------------------------------------------
+
+3. File Sharing
+
+Support:
+
+- Images
+- PDFs
+- Documents
+
+Persist attachments.
+
+Preview attachments.
+
+---------------------------------------------------------------------
+
+4. Recording
+
+Implement:
+
+- Start Recording
+- Stop Recording
+
+Statuses:
+
+- Recording
+- Processing
+- Ready
+
+======================================================================
+PHASE 6 — POLISH FEATURES
+======================================================================
+
+Add:
+
+✓ Toast Notifications
+
+Examples:
+
+- Customer Joined
+- Agent Joined
+- Recording Started
+- Connection Lost
+- File Uploaded
+
+---------------------------------------------------------------------
+
+✓ Call Timer
+
+HH:MM:SS
+
+---------------------------------------------------------------------
+
+✓ Session Timeline
+
+Events:
+
+- Agent Joined
+- Customer Joined
+- Camera Started
+- Recording Started
+- File Uploaded
+- Session Ended
+
+---------------------------------------------------------------------
+
+✓ Empty States
+
+No Sessions
+
+No Messages
+
+No Participants
+
+No History
+
+Must look intentional and professional.
+
+======================================================================
+FINAL DEMO OBJECTIVE
+======================================================================
+
+The demo should tell a customer support story.
+
+Scenario:
+
+Customer reports:
+
+"My ceiling fan is making a clicking noise."
+
+Flow:
+
+1. Agent logs in.
+2. Agent creates support session.
+3. Invite link generated.
+4. Customer joins from mobile browser.
+5. Video starts.
+6. Customer shows the fan.
+7. Agent diagnoses issue.
+8. Customer sends image/PDF.
+9. Chat updates in real time.
+10. Admin dashboard tracks session.
+11. Issue resolved.
+12. Agent closes session.
+13. Session marked CLOSED.
+14. Session history remains accessible.
+
+This should feel like a production-ready Atomberg support platform, not a generic video calling application.
+
+ABSOLUTE PRIORITY ORDER:
+
+1. Fix remote video rendering
+2. Mobile responsiveness
+3. Session history page
+4. Admin dashboard redesign
+5. Reconnect handling
+6. File sharing
+7. Recording
+8. UI polish

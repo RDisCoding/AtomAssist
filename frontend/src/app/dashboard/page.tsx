@@ -3,8 +3,11 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import { Users, Clock, MonitorPlay, LogOut, Copy, Plus, Activity } from 'lucide-react';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -60,56 +63,192 @@ export default function DashboardPage() {
     }
   };
 
+  const copyToClipboard = (id: string) => {
+    const link = `${window.location.origin}/join/${id}`;
+    navigator.clipboard.writeText(link);
+    alert('Invite link copied!');
+  };
+
+  const activeCount = sessions.filter(s => s.status === 'ACTIVE').length;
+
   return (
-    <div className="p-8 max-w-4xl mx-auto space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Agent Dashboard</h1>
-        <Button variant="outline" onClick={() => {
-          localStorage.clear();
-          router.push('/');
-        }}>Logout</Button>
-      </div>
+    <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
+      {/* Top Navigation */}
+      <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-primary rounded-md flex items-center justify-center">
+                <span className="font-bold text-black">A</span>
+              </div>
+              <span className="text-xl font-bold tracking-tight text-gray-900">AtomAssist</span>
+            </div>
+            <div className="flex items-center gap-4">
+              <Button variant="ghost" className="text-gray-600 hidden md:flex" onClick={() => router.push('/admin')}>
+                Admin Panel
+              </Button>
+              <Button variant="outline" className="gap-2" onClick={() => {
+                localStorage.clear();
+                router.push('/');
+              }}>
+                <LogOut className="w-4 h-4" />
+                <span className="hidden sm:inline">Logout</span>
+              </Button>
+            </div>
+          </div>
+        </div>
+      </header>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Create New Support Session</CardTitle>
-        </CardHeader>
-        <CardContent className="flex gap-4">
-          <Input 
-            placeholder="Issue Title (e.g. Broken Fan)" 
-            value={newSessionTitle}
-            onChange={(e) => setNewSessionTitle(e.target.value)}
-          />
-          <Button onClick={handleCreateSession}>Create Session</Button>
-        </CardContent>
-      </Card>
+      {/* Main Content */}
+      <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full space-y-8">
+        
+        {/* Hero Section */}
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Customer Support Command Center</h1>
+          <p className="mt-2 text-sm text-gray-600">Manage your active support sessions and resolve customer issues via live video.</p>
+        </div>
 
-      <div className="grid gap-4">
-        <h2 className="text-2xl font-semibold mt-4">Active & Past Sessions</h2>
-        {sessions.length === 0 ? (
-          <p className="text-gray-500">No sessions found.</p>
-        ) : (
-          sessions.map((session) => (
-            <Card key={session.id}>
-              <CardContent className="p-4 flex justify-between items-center">
-                <div>
-                  <h3 className="font-bold text-lg">{session.title}</h3>
-                  <p className="text-sm text-gray-500">Status: {session.status}</p>
-                  <p className="text-sm text-gray-500">
-                    Invite Link: <a href={`/join/${session.id}`} className="text-blue-500 underline" target="_blank" rel="noreferrer">/join/{session.id}</a>
-                  </p>
-                </div>
-                <div className="flex gap-2">
-                  <Button variant="outline" onClick={() => router.push(`/session/${session.id}`)}>Enter Room</Button>
-                  {session.status === 'ACTIVE' && (
-                    <Button variant="destructive" onClick={() => handleEndSession(session.id)}>End Session</Button>
+        {/* Metrics */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card>
+            <CardContent className="p-6 flex flex-col justify-center">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-medium text-gray-500">Active Sessions</h3>
+                <Activity className="w-4 h-4 text-primary" />
+              </div>
+              <p className="text-3xl font-bold mt-2 text-gray-900">{activeCount}</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-6 flex flex-col justify-center">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-medium text-gray-500">Customers Served Today</h3>
+                <Users className="w-4 h-4 text-blue-500" />
+              </div>
+              <p className="text-3xl font-bold mt-2 text-gray-900">{sessions.length}</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-6 flex flex-col justify-center">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-medium text-gray-500">Avg Resolution Time</h3>
+                <Clock className="w-4 h-4 text-green-500" />
+              </div>
+              <p className="text-3xl font-bold mt-2 text-gray-900">4m 12s</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-6 flex flex-col justify-center">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-medium text-gray-500">Online Agents</h3>
+                <MonitorPlay className="w-4 h-4 text-purple-500" />
+              </div>
+              <p className="text-3xl font-bold mt-2 text-gray-900">1</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+          
+          {/* Create Session */}
+          <Card className="lg:col-span-1 sticky top-24 shadow-sm border-gray-200">
+            <CardHeader className="bg-gray-50 border-b border-gray-100 pb-4">
+              <CardTitle className="text-lg text-gray-900">New Session</CardTitle>
+              <CardDescription>Generate an invite link for a customer.</CardDescription>
+            </CardHeader>
+            <CardContent className="pt-6 space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">Issue Description</label>
+                <Input 
+                  placeholder="e.g. Broken Ceiling Fan" 
+                  value={newSessionTitle}
+                  onChange={(e) => setNewSessionTitle(e.target.value)}
+                  className="w-full border-gray-300 focus:border-primary focus:ring-primary"
+                />
+              </div>
+              <Button 
+                onClick={handleCreateSession} 
+                className="w-full bg-primary hover:bg-yellow-500 text-black font-semibold gap-2"
+              >
+                <Plus className="w-4 h-4" /> Create Support Session
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Session List */}
+          <Card className="lg:col-span-2 shadow-sm border-gray-200 overflow-hidden">
+            <CardHeader className="bg-white border-b border-gray-100 pb-4">
+              <CardTitle className="text-lg text-gray-900">Session History</CardTitle>
+            </CardHeader>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader className="bg-gray-50">
+                  <TableRow>
+                    <TableHead className="w-[300px] font-semibold text-gray-600">Issue</TableHead>
+                    <TableHead className="font-semibold text-gray-600 hidden sm:table-cell">Participants</TableHead>
+                    <TableHead className="font-semibold text-gray-600">Status</TableHead>
+                    <TableHead className="text-right font-semibold text-gray-600">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {sessions.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={4} className="h-32 text-center text-gray-500">
+                        No active sessions. Create one to get started.
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    sessions.map((session) => (
+                      <TableRow key={session.id} className="hover:bg-gray-50">
+                        <TableCell className="font-medium">
+                          <div className="text-sm text-gray-900">{session.title}</div>
+                          <div className="text-xs text-gray-500 mt-1 font-mono">{session.id.split('-')[0]}...</div>
+                        </TableCell>
+                        <TableCell className="hidden sm:table-cell">
+                          {session.participants.length > 0 ? (
+                            <div className="flex -space-x-2">
+                              {session.participants.map((p: any) => (
+                                <div key={p.id} className="w-6 h-6 rounded-full bg-gray-200 border-2 border-white flex items-center justify-center text-[10px] font-bold text-gray-600" title={p.user.name}>
+                                  {p.user.name.charAt(0).toUpperCase()}
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <span className="text-xs text-gray-400 italic">None</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={session.status === 'ACTIVE' ? 'default' : 'secondary'} className={session.status === 'ACTIVE' ? 'bg-green-100 text-green-800 hover:bg-green-200' : 'bg-gray-100 text-gray-600'}>
+                            {session.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            {session.status === 'ACTIVE' && (
+                              <>
+                                <Button variant="outline" size="sm" onClick={() => copyToClipboard(session.id)} title="Copy Invite Link" className="hidden sm:flex border-gray-300">
+                                  <Copy className="w-4 h-4" />
+                                </Button>
+                                <Button variant="default" size="sm" onClick={() => router.push(`/session/${session.id}`)} className="bg-black hover:bg-gray-800 text-white">
+                                  Join
+                                </Button>
+                                <Button variant="destructive" size="sm" onClick={() => handleEndSession(session.id)} title="End Session" className="hidden sm:flex">
+                                  End
+                                </Button>
+                              </>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
                   )}
-                </div>
-              </CardContent>
-            </Card>
-          ))
-        )}
-      </div>
+                </TableBody>
+              </Table>
+            </div>
+          </Card>
+        </div>
+      </main>
     </div>
   );
 }

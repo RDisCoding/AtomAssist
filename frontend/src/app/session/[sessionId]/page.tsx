@@ -5,8 +5,8 @@ import { useRouter } from 'next/navigation';
 import { io, Socket } from 'socket.io-client';
 import * as mediasoupClient from 'mediasoup-client';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Mic, MicOff, Video as VideoIcon, VideoOff, MessageSquare, Users as UsersIcon, PhoneOff, Clock, Activity, ChevronDown } from 'lucide-react';
 
 export default function SessionRoomPage({ params }: { params: Promise<{ sessionId: string }> }) {
   const router = useRouter();
@@ -24,25 +24,40 @@ export default function SessionRoomPage({ params }: { params: Promise<{ sessionI
   // Media state
   const [device, setDevice] = useState<mediasoupClient.Device | null>(null);
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
-  
-  // remoteStreams: userId -> { stream, video: boolean, audio: boolean }
-  const [remotePeers, setRemotePeers] = useState<Record<string, { stream: MediaStream, video: boolean, audio: boolean, name: string }>>({});
+  const [remotePeers, setRemotePeers] = useState<Record<string, { stream: MediaStream, video: boolean, audio: boolean, name: string, role: string }>>({});
   
   const [sendTransport, setSendTransport] = useState<mediasoupClient.types.Transport | null>(null);
   const [recvTransport, setRecvTransport] = useState<mediasoupClient.types.Transport | null>(null);
   const [videoProducer, setVideoProducer] = useState<mediasoupClient.types.Producer | null>(null);
   const [audioProducer, setAudioProducer] = useState<mediasoupClient.types.Producer | null>(null);
 
-  const [isVideoPaused, setIsVideoPaused] = useState(false);
-  const [isAudioPaused, setIsAudioPaused] = useState(false);
+  const [isVideoPaused, setIsVideoPaused] = useState(true);
+  const [isAudioPaused, setIsAudioPaused] = useState(true);
 
-  const localVideoRef = useRef<HTMLVideoElement>(null);
+  // UI State
+  const [activeTab, setActiveTab] = useState<'chat' | 'participants' | 'events'>('chat');
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [callDuration, setCallDuration] = useState(0);
+
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const localStreamRef = useRef<MediaStream | null>(null);
 
   useEffect(() => {
-    const token = localStorage.getItem('token') || localStorage.getItem('customer_token');
-    const storedUser = localStorage.getItem('user') || localStorage.getItem('customer_user');
+    // Timer
+    const timer = setInterval(() => setCallDuration(prev => prev + 1), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    // Scroll to bottom of chat
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, activeTab, mobileSidebarOpen]);
+
+  useEffect(() => {
+    const storedUser = sessionStorage.getItem('user') || localStorage.getItem('user');
+    const token = sessionStorage.getItem('token') || localStorage.getItem('token');
     
-    if (!token || !storedUser) {
+    if (!storedUser || !token) {
       router.push('/');
       return;
     }
@@ -51,10 +66,10 @@ export default function SessionRoomPage({ params }: { params: Promise<{ sessionI
     setUser(parsedUser);
 
     const socket = io('http://localhost:4000', { auth: { token }, query: { sessionId } });
-    const mSocket = io('http://localhost:5000');
+    const mSocket = io('http://localhost:5000', { auth: { user: parsedUser } });
 
     socket.on('connect', () => {
-      setEvents(prev => [...prev, `Connected to main server.`]);
+      setEvents(prev => [...prev, `Connected to support server.`]);
       socket.emit('join-room', { sessionId, user: parsedUser });
       socket.emit('fetch-messages', { sessionId }, (fetched: any[]) => setMessages(fetched));
     });
@@ -68,7 +83,7 @@ export default function SessionRoomPage({ params }: { params: Promise<{ sessionI
     });
 
     socket.on('user-joined', (data: any) => {
-      setEvents(prev => [...prev, `${data.user.name} joined.`]);
+      setEvents(prev => [...prev, `${data.user.name} joined the session.`]);
       setParticipants(prev => {
         if(prev.find(p => p.id === data.user.id)) return prev;
         return [...prev, data.user];
@@ -76,7 +91,7 @@ export default function SessionRoomPage({ params }: { params: Promise<{ sessionI
     });
 
     socket.on('user-left', (data: any) => {
-      setEvents(prev => [...prev, `${data.user.name} left.`]);
+      setEvents(prev => [...prev, `${data.user.name} left the session.`]);
       setParticipants(prev => prev.filter(p => p.id !== data.user.id));
       setRemotePeers(prev => {
         const next = { ...prev };
@@ -95,12 +110,27 @@ export default function SessionRoomPage({ params }: { params: Promise<{ sessionI
       });
     });
 
-    mSocket.on('connect', () => {
-      initMediasoup(mSocket);
+    socket.on('session-ended', () => {
+      alert('This session has been forcibly ended by an administrator.');
+      
+      // Cleanup locally
+      if (localStreamRef.current) {
+        localStreamRef.current.getTracks().forEach(t => t.stop());
+        localStreamRef.current = null;
+      }
+      socket.disconnect();
+      mSocket.disconnect();
+      
+      if (user?.role === 'AGENT' || user?.role === 'ADMIN') {
+        router.push('/dashboard');
+      } else {
+        sessionStorage.clear();
+        router.push('/');
+      }
     });
 
-    mSocket.on('new-producer', ({ producerId, userId }) => {
-      consumeRemoteTrack(mSocket, producerId, userId);
+    mSocket.on('connect', () => {
+      initMediasoup(mSocket);
     });
 
     setMainSocket(socket);
@@ -112,11 +142,7 @@ export default function SessionRoomPage({ params }: { params: Promise<{ sessionI
     };
   }, [sessionId, router]);
 
-  useEffect(() => {
-    if (localVideoRef.current && localStream) {
-      localVideoRef.current.srcObject = localStream;
-    }
-  }, [localStream]);
+  // useEffect for localStream removed since we use ref callback now
 
   const initMediasoup = async (mSocket: Socket) => {
     try {
@@ -127,9 +153,12 @@ export default function SessionRoomPage({ params }: { params: Promise<{ sessionI
       const dev = new mediasoupClient.Device();
       await dev.load({ routerRtpCapabilities });
       setDevice(dev);
-      setEvents(prev => [...prev, `Mediasoup device ready.`]);
 
       const recv = await createRecvTransport(mSocket, dev);
+
+      mSocket.on('new-producer', ({ producerId, userId }: any) => {
+        consumeRemoteTrack(mSocket, producerId, userId, dev, recv);
+      });
 
       mSocket.emit('getProducers', { sessionId }, (existingProducers: any[]) => {
         existingProducers.forEach(p => {
@@ -210,10 +239,16 @@ export default function SessionRoomPage({ params }: { params: Promise<{ sessionI
       });
 
       setRemotePeers(prev => {
-        const pName = participants.find(p => p.id === userId)?.name || 'Remote Participant';
-        const existing = prev[userId] || { stream: new MediaStream(), video: true, audio: true, name: pName };
-        existing.stream.addTrack(consumer.track);
-        return { ...prev, [userId]: existing };
+        const participant = participants.find(p => p.id === userId);
+        const pName = participant?.name || 'Remote Participant';
+        const pRole = participant?.role || 'CUSTOMER';
+        const existing = prev[userId] || { stream: new MediaStream(), video: true, audio: true, name: pName, role: pRole };
+        
+        // Force a new MediaStream instance so the React ref callback fires again to attach it
+        const newStream = new MediaStream(existing.stream.getTracks());
+        newStream.addTrack(consumer.track);
+        
+        return { ...prev, [userId]: { ...existing, stream: newStream } };
       });
 
       mSocket.emit('resumeConsumer', { consumerId: consumer.id }, () => {});
@@ -223,88 +258,104 @@ export default function SessionRoomPage({ params }: { params: Promise<{ sessionI
     }
   };
 
-  const startMedia = async () => {
+  const toggleVideo = async () => {
+    if (!localStream) {
+      await initializeMedia(true, !isAudioPaused);
+      return;
+    }
+    
+    if (videoProducer && mainSocket) {
+      const isPaused = videoProducer.paused;
+      if (isPaused) {
+        videoProducer.resume();
+        localStream.getVideoTracks().forEach(t => t.enabled = true);
+      } else {
+        videoProducer.pause();
+        localStream.getVideoTracks().forEach(t => t.enabled = false);
+      }
+      setIsVideoPaused(!isPaused);
+      mainSocket.emit('media-state', { sessionId, video: isPaused, audio: !isAudioPaused });
+    } else if (mainSocket) {
+      // If we don't have a producer yet, initialize media
+      await initializeMedia(true, !isAudioPaused);
+    }
+  };
+
+  const toggleAudio = async () => {
+    if (!localStream) {
+      await initializeMedia(!isVideoPaused, true);
+      return;
+    }
+
+    if (audioProducer && mainSocket) {
+      const isPaused = audioProducer.paused;
+      if (isPaused) {
+        audioProducer.resume();
+        localStream.getAudioTracks().forEach(t => t.enabled = true);
+      } else {
+        audioProducer.pause();
+        localStream.getAudioTracks().forEach(t => t.enabled = false);
+      }
+      setIsAudioPaused(!isPaused);
+      mainSocket.emit('media-state', { sessionId, video: !isVideoPaused, audio: isPaused });
+    } else if (mainSocket) {
+      await initializeMedia(!isVideoPaused, true);
+    }
+  };
+
+  const initializeMedia = async (videoEnabled: boolean, audioEnabled: boolean) => {
     if (!device || !mediaSocket || !mainSocket) return;
     try {
       let transport = sendTransport;
       if (!transport) transport = await createSendTransport(mediaSocket, device);
 
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-      setLocalStream(stream);
+      const stream = localStream || await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      if (!localStream) {
+        setLocalStream(stream);
+        localStreamRef.current = stream;
+      }
 
       const videoTrack = stream.getVideoTracks()[0];
       const audioTrack = stream.getAudioTracks()[0];
 
-      if (videoTrack) {
+      // Set initial states
+      if (videoTrack) videoTrack.enabled = videoEnabled;
+      if (audioTrack) audioTrack.enabled = audioEnabled;
+
+      if (videoTrack && !videoProducer) {
         const vp = await transport.produce({ track: videoTrack });
+        if (!videoEnabled) vp.pause();
         setVideoProducer(vp);
       }
-      if (audioTrack) {
+      if (audioTrack && !audioProducer) {
         const ap = await transport.produce({ track: audioTrack });
+        if (!audioEnabled) ap.pause();
         setAudioProducer(ap);
       }
 
-      setEvents(prev => [...prev, `Publishing media...`]);
-      setIsVideoPaused(false);
-      setIsAudioPaused(false);
+      setIsVideoPaused(!videoEnabled);
+      setIsAudioPaused(!audioEnabled);
       
-      mainSocket.emit('media-state', { sessionId, video: true, audio: true });
+      mainSocket.emit('media-state', { sessionId, video: videoEnabled, audio: audioEnabled });
     } catch (err) {
       console.error(err);
-      alert('Could not start camera');
-    }
-  };
-
-  const stopMedia = () => {
-    if (videoProducer) videoProducer.close();
-    if (audioProducer) audioProducer.close();
-    if (localStream) localStream.getTracks().forEach(t => t.stop());
-    setLocalStream(null);
-    setVideoProducer(null);
-    setAudioProducer(null);
-    
-    if (mainSocket) {
-      mainSocket.emit('media-state', { sessionId, video: false, audio: false });
-    }
-  };
-
-  const toggleVideo = () => {
-    if (videoProducer && mainSocket) {
-      const isPaused = videoProducer.paused;
-      if (isPaused) {
-        videoProducer.resume();
-        localStream?.getVideoTracks().forEach(t => t.enabled = true);
-      } else {
-        videoProducer.pause();
-        localStream?.getVideoTracks().forEach(t => t.enabled = false);
-      }
-      setIsVideoPaused(!isPaused);
-      mainSocket.emit('media-state', { sessionId, video: isPaused, audio: !isAudioPaused });
-    }
-  };
-
-  const toggleAudio = () => {
-    if (audioProducer && mainSocket) {
-      const isPaused = audioProducer.paused;
-      if (isPaused) {
-        audioProducer.resume();
-        localStream?.getAudioTracks().forEach(t => t.enabled = true);
-      } else {
-        audioProducer.pause();
-        localStream?.getAudioTracks().forEach(t => t.enabled = false);
-      }
-      setIsAudioPaused(!isPaused);
-      mainSocket.emit('media-state', { sessionId, video: !isVideoPaused, audio: isPaused });
+      alert('Could not access camera/microphone. Please check permissions.');
     }
   };
 
   const handleLeave = () => {
-    stopMedia();
+    if (videoProducer) videoProducer.close();
+    if (audioProducer) audioProducer.close();
+    if (localStream) localStream.getTracks().forEach(t => t.stop());
+    if (localStreamRef.current) localStreamRef.current.getTracks().forEach(t => t.stop());
+    
     if (mainSocket) mainSocket.disconnect();
     if (mediaSocket) mediaSocket.disconnect();
-    if (user?.role === 'AGENT') router.push('/dashboard');
-    else {
-      localStorage.clear();
+    
+    if (user?.role === 'AGENT' || user?.role === 'ADMIN') {
+      router.push('/dashboard');
+    } else {
+      sessionStorage.clear();
       router.push('/');
     }
   };
@@ -316,140 +367,281 @@ export default function SessionRoomPage({ params }: { params: Promise<{ sessionI
     setChatInput('');
   };
 
+  const formatTime = (seconds: number) => {
+    const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+    const s = (seconds % 60).toString().padStart(2, '0');
+    return `${m}:${s}`;
+  };
+
   if (!user) return null;
 
-  // Calculate dynamic grid columns based on number of active streams
-  const activeStreamsCount = (localStream ? 1 : 0) + Object.keys(remotePeers).length;
-  const gridClass = activeStreamsCount === 1 ? 'grid-cols-1' : activeStreamsCount === 2 ? 'grid-cols-2' : 'grid-cols-2 md:grid-cols-3';
+  const activeStreamsCount = 1 + participants.filter(p => p.id !== user.id).length;
+  const gridClass = activeStreamsCount === 1 ? 'grid-cols-1' : activeStreamsCount === 2 ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-2 md:grid-cols-3';
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-6xl mx-auto space-y-6">
-        <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold">Support Session: {sessionId}</h1>
-          <Button variant="destructive" onClick={handleLeave}>Leave Call</Button>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card className="md:col-span-2 flex flex-col min-h-[500px]">
-            <CardHeader className="flex flex-row justify-between items-center py-4 border-b">
-              <CardTitle>Video Room</CardTitle>
-              <div className="flex gap-2">
-                {!localStream ? (
-                  <Button onClick={startMedia}>Start Camera</Button>
-                ) : (
-                  <>
-                    <Button variant="outline" onClick={toggleVideo}>
-                      {isVideoPaused ? 'Turn Video On' : 'Turn Video Off'}
-                    </Button>
-                    <Button variant="outline" onClick={toggleAudio}>
-                      {isAudioPaused ? 'Unmute Mic' : 'Mute Mic'}
-                    </Button>
-                    <Button variant="destructive" onClick={stopMedia}>Stop Sharing</Button>
-                  </>
-                )}
-              </div>
-            </CardHeader>
-            <CardContent className="flex-1 p-4 bg-gray-100 flex flex-col justify-center">
-              
-              {activeStreamsCount === 0 && (
-                <div className="text-center text-gray-400 py-20">Waiting for participants to turn on camera...</div>
-              )}
-
-              <div className={`grid gap-4 w-full h-full ${gridClass}`}>
-                {/* Local Video */}
-                {localStream && (
-                  <div className="bg-gray-900 aspect-video rounded-lg overflow-hidden relative shadow-lg">
-                    {isVideoPaused ? (
-                      <div className="absolute inset-0 flex items-center justify-center text-gray-500 bg-gray-800">
-                        Camera Off
-                      </div>
-                    ) : (
-                      <video
-                        ref={localVideoRef}
-                        autoPlay playsInline muted
-                        className="w-full h-full object-cover transform scale-x-[-1]"
-                      />
-                    )}
-                    <div className="absolute bottom-4 left-4 bg-black bg-opacity-60 px-3 py-1 rounded text-white text-sm font-semibold flex gap-2 items-center">
-                      {user.name} (You) {isAudioPaused && <span className="text-red-400 text-xs px-1">Muted</span>}
-                    </div>
-                  </div>
-                )}
-
-                {/* Remote Videos */}
-                {Object.entries(remotePeers).map(([id, peer]) => (
-                  <div key={id} className="bg-gray-800 aspect-video rounded-lg overflow-hidden relative shadow-lg">
-                    {!peer.video ? (
-                      <div className="absolute inset-0 flex items-center justify-center text-gray-400 bg-gray-700">
-                        Camera Off
-                      </div>
-                    ) : (
-                      <video
-                        autoPlay playsInline
-                        className="w-full h-full object-cover"
-                        ref={(el) => { if (el && el.srcObject !== peer.stream) el.srcObject = peer.stream; }}
-                      />
-                    )}
-                    <div className="absolute bottom-4 left-4 bg-black bg-opacity-60 px-3 py-1 rounded text-white text-sm font-semibold flex gap-2 items-center">
-                      {peer.name || 'Remote'} {!peer.audio && <span className="text-red-400 text-xs px-1">Muted</span>}
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-            </CardContent>
-          </Card>
-
-          {/* Sidebar */}
-          <div className="space-y-4 flex flex-col h-[500px]">
-            <Card className="flex-shrink-0">
-              <CardHeader className="py-2">
-                <CardTitle className="text-md">Participants ({participants.length + 1})</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-1 pb-3 text-xs max-h-[100px] overflow-y-auto">
-                <div className="p-1 bg-blue-50 text-blue-800 rounded font-medium border border-blue-100">
-                  {user.name} (You) - {user.role}
-                </div>
-                {participants.map(p => (
-                  <div key={p.id} className="p-1 border rounded bg-white">
-                    {p.name} - <span className="text-gray-500">{p.role}</span>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-
-            <Card className="flex-1 flex flex-col min-h-0">
-              <CardHeader className="py-2 border-b">
-                <CardTitle className="text-md">Chat & Events</CardTitle>
-              </CardHeader>
-              <CardContent className="flex-1 overflow-y-auto space-y-2 text-sm p-3 font-sans">
-                {events.map((evt, i) => (
-                  <div key={`evt-${i}`} className="text-xs text-gray-400 text-center italic">{evt}</div>
-                ))}
-                {messages.map((msg, i) => (
-                  <div key={`msg-${i}`} className={`flex flex-col ${msg.senderId === user.id ? 'items-end' : 'items-start'}`}>
-                    <span className="text-xs text-gray-500 mb-1">{msg.sender.name}</span>
-                    <div className={`px-3 py-2 rounded-lg max-w-[80%] ${msg.senderId === user.id ? 'bg-blue-600 text-white' : 'bg-gray-200 text-black'}`}>
-                      {msg.content}
-                    </div>
-                  </div>
-                ))}
-              </CardContent>
-              <div className="p-3 border-t">
-                <form onSubmit={handleSendMessage} className="flex gap-2">
-                  <Input 
-                    placeholder="Type a message..." 
-                    value={chatInput}
-                    onChange={e => setChatInput(e.target.value)}
-                    className="flex-1"
-                  />
-                  <Button type="submit" size="sm">Send</Button>
-                </form>
-              </div>
-            </Card>
+    <div className="flex flex-col h-screen bg-[#111111] text-white font-sans overflow-hidden">
+      
+      {/* Top Bar */}
+      <header className="h-14 flex-shrink-0 border-b border-gray-800 bg-[#1E1E1E] flex items-center justify-between px-4 sm:px-6 z-10">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 bg-primary rounded flex items-center justify-center">
+            <span className="font-bold text-black text-sm">A</span>
+          </div>
+          <div className="hidden sm:block">
+            <h1 className="text-sm font-semibold truncate max-w-[200px]">Session: {sessionId.split('-')[0]}</h1>
+            <p className="text-xs text-gray-400 flex items-center gap-1">
+              <span className="w-2 h-2 rounded-full bg-green-500"></span> Connected
+            </p>
           </div>
         </div>
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 bg-gray-900 px-3 py-1.5 rounded-full border border-gray-800">
+            <Clock className="w-4 h-4 text-gray-400" />
+            <span className="text-sm font-mono text-gray-300">{formatTime(callDuration)}</span>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content Area */}
+      <div className="flex flex-1 overflow-hidden relative">
+        
+        {/* Video Area */}
+        <div className={`flex-1 flex flex-col p-2 sm:p-4 transition-all duration-300 ${mobileSidebarOpen ? 'hidden md:flex' : 'flex'} min-h-0`}>
+          <div className={`flex-1 min-h-0 grid gap-2 sm:gap-4 ${gridClass} items-center justify-center auto-rows-fr`}>
+            
+            {/* Local Video */}
+            <div className="bg-[#1E1E1E] w-full h-full min-h-0 rounded-xl overflow-hidden relative border border-gray-800 shadow-xl group">
+              {isVideoPaused ? (
+                <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-500 bg-[#1E1E1E]">
+                  <div className="w-20 h-20 rounded-full bg-gray-800 flex items-center justify-center mb-4">
+                    <span className="text-2xl font-bold text-gray-400">{user.name.charAt(0).toUpperCase()}</span>
+                  </div>
+                  <span className="text-sm">Camera is off</span>
+                </div>
+              ) : (
+                <video
+                  ref={(el) => { if (el && localStream && el.srcObject !== localStream) el.srcObject = localStream; }}
+                  autoPlay playsInline muted
+                  className="w-full h-full object-contain transform scale-x-[-1] bg-black"
+                />
+              )}
+              <div className="absolute bottom-4 left-4 bg-black/70 backdrop-blur-sm px-3 py-1.5 rounded-md text-white text-xs sm:text-sm font-medium flex gap-2 items-center border border-white/10">
+                {user.name} (You)
+                {isAudioPaused && <MicOff className="w-3.5 h-3.5 text-red-400" />}
+              </div>
+            </div>
+
+            {/* Remote Videos */}
+            {participants.filter(p => p.id !== user.id).map((p) => {
+              const peer = remotePeers[p.id];
+              const isVideoOff = !peer || !peer.video;
+              const isAudioOff = !peer || !peer.audio;
+              return (
+                <div key={p.id} className="bg-[#1E1E1E] w-full h-full min-h-0 rounded-xl overflow-hidden relative border border-gray-800 shadow-xl group">
+                  {isVideoOff ? (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-500 bg-[#1E1E1E]">
+                      <div className="w-20 h-20 rounded-full bg-gray-800 flex items-center justify-center mb-4">
+                        <span className="text-2xl font-bold text-gray-400">{p.name.charAt(0).toUpperCase()}</span>
+                      </div>
+                      <span className="text-sm">Camera is off</span>
+                    </div>
+                  ) : (
+                    <video
+                      autoPlay playsInline
+                      className="w-full h-full object-contain bg-black"
+                      ref={(el) => { if (el && peer.stream && el.srcObject !== peer.stream) el.srcObject = peer.stream; }}
+                    />
+                  )}
+                  <div className="absolute bottom-4 left-4 bg-black/70 backdrop-blur-sm px-3 py-1.5 rounded-md text-white text-xs sm:text-sm font-medium flex gap-2 items-center border border-white/10">
+                    {p.name} <span className="text-gray-400 text-[10px] uppercase border border-gray-600 px-1 rounded">{p.role}</span>
+                    {isAudioOff && <MicOff className="w-3.5 h-3.5 text-red-400" />}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Bottom Control Bar */}
+          <div className="h-20 mt-4 flex items-center justify-center gap-3 sm:gap-6">
+            <Button 
+              onClick={toggleAudio} 
+              variant="outline" 
+              className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center border-none ${isAudioPaused ? 'bg-red-500 hover:bg-red-600 text-white' : 'bg-gray-800 hover:bg-gray-700 text-white'}`}
+            >
+              {isAudioPaused ? <MicOff className="w-5 h-5 sm:w-6 sm:h-6" /> : <Mic className="w-5 h-5 sm:w-6 sm:h-6" />}
+            </Button>
+            
+            <Button 
+              onClick={toggleVideo} 
+              variant="outline" 
+              className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center border-none ${isVideoPaused ? 'bg-red-500 hover:bg-red-600 text-white' : 'bg-gray-800 hover:bg-gray-700 text-white'}`}
+            >
+              {isVideoPaused ? <VideoOff className="w-5 h-5 sm:w-6 sm:h-6" /> : <VideoIcon className="w-5 h-5 sm:w-6 sm:h-6" />}
+            </Button>
+
+            <Button 
+              onClick={handleLeave} 
+              variant="destructive" 
+              className="w-12 h-12 sm:w-16 sm:h-14 rounded-full flex items-center justify-center bg-red-600 hover:bg-red-700 shadow-lg px-0 sm:px-6"
+            >
+              <PhoneOff className="w-5 h-5 sm:w-6 sm:h-6" />
+            </Button>
+
+            <div className="w-px h-8 bg-gray-800 mx-2 hidden sm:block"></div>
+
+            <Button 
+              onClick={() => {
+                setActiveTab('chat');
+                setMobileSidebarOpen(!mobileSidebarOpen);
+              }} 
+              variant="outline" 
+              className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center border-none md:hidden ${mobileSidebarOpen && activeTab === 'chat' ? 'bg-primary text-black' : 'bg-gray-800 text-white hover:bg-gray-700'}`}
+            >
+              <MessageSquare className="w-5 h-5" />
+            </Button>
+
+            <Button 
+              onClick={() => {
+                setActiveTab('participants');
+                setMobileSidebarOpen(!mobileSidebarOpen);
+              }} 
+              variant="outline" 
+              className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center border-none md:hidden ${mobileSidebarOpen && activeTab === 'participants' ? 'bg-primary text-black' : 'bg-gray-800 text-white hover:bg-gray-700'}`}
+            >
+              <UsersIcon className="w-5 h-5" />
+            </Button>
+          </div>
+        </div>
+
+        {/* Right Sidebar (Desktop) / Sliding Drawer (Mobile) */}
+        <div className={`
+          absolute md:relative right-0 top-0 h-full w-full md:w-80 lg:w-96 bg-[#1E1E1E] border-l border-gray-800 flex flex-col transition-transform duration-300 z-20
+          ${mobileSidebarOpen ? 'translate-x-0' : 'translate-x-full md:translate-x-0'}
+        `}>
+          
+          {/* Mobile Close Button */}
+          <div className="md:hidden flex items-center justify-between p-4 border-b border-gray-800 bg-[#1A1A1A]">
+            <span className="font-semibold text-gray-200 capitalize">{activeTab}</span>
+            <Button variant="ghost" size="sm" onClick={() => setMobileSidebarOpen(false)} className="text-gray-400">
+              <ChevronDown className="w-5 h-5" />
+            </Button>
+          </div>
+
+          {/* Tabs Navigation (Desktop) */}
+          <div className="hidden md:flex p-2 gap-1 bg-[#1A1A1A] border-b border-gray-800">
+            <button 
+              onClick={() => setActiveTab('chat')}
+              className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${activeTab === 'chat' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-gray-200'}`}
+            >
+              Chat
+            </button>
+            <button 
+              onClick={() => setActiveTab('participants')}
+              className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${activeTab === 'participants' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-gray-200'}`}
+            >
+              People
+            </button>
+            <button 
+              onClick={() => setActiveTab('events')}
+              className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${activeTab === 'events' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-gray-200'}`}
+            >
+              Events
+            </button>
+          </div>
+
+          {/* Tab Content Area */}
+          <div className="flex-1 overflow-y-auto p-4 space-y-4 relative">
+            
+            {activeTab === 'chat' && (
+              <div className="absolute inset-0 flex flex-col bg-[#1E1E1E]">
+                <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                  {messages.length === 0 && (
+                    <div className="text-center text-sm text-gray-500 mt-10">No messages yet. Start the conversation!</div>
+                  )}
+                  {messages.map((msg, i) => {
+                    const isMe = msg.senderId === user.id;
+                    return (
+                      <div key={i} className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
+                        <span className="text-[10px] text-gray-500 mb-1 px-1">{msg.sender.name}</span>
+                        <div className={`px-4 py-2 rounded-2xl max-w-[85%] text-sm ${isMe ? 'bg-primary text-black rounded-tr-sm' : 'bg-gray-800 text-gray-100 rounded-tl-sm'}`}>
+                          {msg.content}
+                        </div>
+                      </div>
+                    );
+                  })}
+                  <div ref={messagesEndRef} />
+                </div>
+                <div className="p-4 border-t border-gray-800 bg-[#1A1A1A]">
+                  <form onSubmit={handleSendMessage} className="flex gap-2">
+                    <Input 
+                      placeholder="Type a message..." 
+                      value={chatInput}
+                      onChange={e => setChatInput(e.target.value)}
+                      className="flex-1 bg-gray-800 border-gray-700 text-white focus:ring-primary focus:border-primary h-10"
+                    />
+                    <Button type="submit" size="sm" className="bg-primary text-black hover:bg-yellow-500 h-10 px-4">Send</Button>
+                  </form>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'participants' && (
+              <div className="space-y-3">
+                <div className="p-3 bg-gray-800 rounded-lg flex items-center justify-between border border-gray-700">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-black font-bold text-sm">
+                      {user.name.charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-200">{user.name} (You)</p>
+                      <p className="text-[10px] text-gray-400 uppercase">{user.role}</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2 text-gray-400">
+                    {isAudioPaused ? <MicOff className="w-4 h-4 text-red-400" /> : <Mic className="w-4 h-4" />}
+                    {isVideoPaused ? <VideoOff className="w-4 h-4 text-red-400" /> : <VideoIcon className="w-4 h-4" />}
+                  </div>
+                </div>
+
+                {participants.map(p => {
+                  const peerState = remotePeers[p.id];
+                  return (
+                    <div key={p.id} className="p-3 bg-gray-800/50 rounded-lg flex items-center justify-between border border-transparent hover:border-gray-700 transition-colors">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center text-gray-300 font-bold text-sm">
+                          {p.name.charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-gray-300">{p.name}</p>
+                          <p className="text-[10px] text-gray-500 uppercase">{p.role}</p>
+                        </div>
+                      </div>
+                      {peerState && (
+                        <div className="flex gap-2 text-gray-500">
+                          {!peerState.audio ? <MicOff className="w-4 h-4 text-red-400" /> : <Mic className="w-4 h-4 text-gray-400" />}
+                          {!peerState.video ? <VideoOff className="w-4 h-4 text-red-400" /> : <VideoIcon className="w-4 h-4 text-gray-400" />}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {activeTab === 'events' && (
+              <div className="space-y-3 font-mono text-xs">
+                {events.map((evt, i) => (
+                  <div key={i} className="flex gap-3 text-gray-400 border-l-2 border-gray-700 pl-3 py-1">
+                    <span className="text-gray-600">{(new Date()).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                    <span>{evt}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+          </div>
+        </div>
+
       </div>
     </div>
   );

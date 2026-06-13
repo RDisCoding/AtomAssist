@@ -4,14 +4,26 @@ import prisma from '../prisma';
 
 const router = express.Router();
 
-router.post('/login', async (req, res) => {
-  const { email, name, role } = req.body;
+const DUMMY_USERS: Record<string, any> = {
+  'agent@atomberg.com': { name: 'Agent Smith', role: 'AGENT', password: 'password123' },
+  'customer@example.com': { name: 'Jane Doe', role: 'CUSTOMER', password: 'password123' },
+  'admin@atomberg.com': { name: 'Admin User', role: 'ADMIN', password: 'password123' },
+};
 
-  if (!email || !name) {
-    return res.status(400).json({ error: 'Email and name are required' });
+router.post('/login', async (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({ error: 'Email and password are required' });
+  }
+
+  const dummy = DUMMY_USERS[email];
+  if (!dummy || dummy.password !== password) {
+    return res.status(401).json({ error: 'Invalid credentials. Use a valid dummy account.' });
   }
 
   try {
+    // Ensure the dummy user is present in the database so the UI can retrieve their real DB record
     let user = await prisma.user.findUnique({
       where: { email }
     });
@@ -20,8 +32,8 @@ router.post('/login', async (req, res) => {
       user = await prisma.user.create({
         data: {
           email,
-          name,
-          role: role || 'CUSTOMER'
+          name: dummy.name,
+          role: dummy.role
         }
       });
     }

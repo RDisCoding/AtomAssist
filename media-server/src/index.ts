@@ -34,6 +34,8 @@ const mediaCodecs: any[] = [
   }
 ];
 
+let workerReadyPromise: Promise<void>;
+
 async function createWorker() {
   worker = await mediasoup.createWorker({
     logLevel: 'warn',
@@ -49,10 +51,11 @@ async function createWorker() {
   console.log(`Mediasoup worker created [pid:${worker.pid}]`);
 }
 
-createWorker();
+workerReadyPromise = createWorker();
 
 // Utility to get or create a router for a specific session
 async function getOrCreateRouter(sessionId: string) {
+  await workerReadyPromise;
   let router = routers.get(sessionId);
   if (!router) {
     router = await worker.createRouter({ mediaCodecs });
@@ -141,7 +144,7 @@ io.on('connection', (socket) => {
       producers.set(producer.id, producer);
 
       const sessionId = (transport as any).sessionId;
-      const user = (socket as any).user;
+      const user = socket.handshake.auth.user;
       
       if (sessionId && user) {
         // Add to global room producers
